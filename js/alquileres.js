@@ -1,9 +1,15 @@
 "use strict";
 
+const URL_SITA =
+  "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SITA_WMS";
+
 // Popup
 var container = document.getElementById("popup");
 var content = document.getElementById("popup-content");
 var closer = document.getElementById("popup-closer");
+
+// Búsqueda
+var searchField = document.getElementById("search");
 
 var overlay = new ol.Overlay({
   element: container,
@@ -45,60 +51,126 @@ let xmlToJson = (xml) => {
   return obj;
 };
 
-let getObjectID = (cp) => {
-  let objectID = null;
-  const url = new URL(
-    "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SimpleSearchService/typedSearchService"
-  );
-  const params = new URLSearchParams();
-  params.set("texto", cp);
-  params.set("type", "v111_codigo_postal");
-  params.set("app", "DV");
-  url.search = params.toString();
-  let xhr = new XMLHttpRequest();
-  xhr.open("GET", url.toString(), false);
-  xhr.send();
-  if (xhr.status == 200) {
-    let data = xmlToJson(xhr.responseXML);
-    console.log(data);
-    let response =
-      data["SOAP-ENV:Envelope"]["SOAP-ENV:Body"].SearchResponse.SearchResult
-        .List["#text"];
-    objectID = response.split("#")[3];
-  }
-  return objectID;
-};
+function getObjectIdByCP(cp) {
+  return new Promise(function (resolve, reject) {
+    var request = new XMLHttpRequest();
 
-let getCQLFilter = (objectID, capa, distancia) => {
-  let cqlFilter = `objectid=${objectID}`;
-  const url = new URL(
-    "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SpatialSearchService/services"
-  );
-  const params = new URLSearchParams();
-  params.set("SERVICE", "DV");
-  params.set("TYPENAME", "carto.v111_codigo_postal");
-  params.set("CQL_FILTER", `OBJECTID=${objectID}`);
-  params.set("PROPERTYNAME", "OBJECTID");
-  params.set("TYPENAME_CONN", "DV");
-  let xhr = new XMLHttpRequest();
-  xhr.open("POST", url.toString(), false);
-  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  xhr.send(params.toString());
-  if (xhr.status == 200) {
-    let data = JSON.parse(xhr.responseText);
-    console.log(data);
-    for (let resultado of data.resultados) {
-      if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
-        for (let feature of resultado.featureCollection.features) {
-          // cqlFilter += cqlFilter !== '' ? ' OR ' : '';
-          cqlFilter += ` OR objectid=${feature.properties.objectid}`;
-        }
-        break;
+    const url = new URL(
+      "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SimpleSearchService/typedSearchService"
+    );
+    url.searchParams.append("texto", cp);
+    url.searchParams.append("type", "v111_codigo_postal");
+    url.searchParams.append("app", "DV");
+
+    request.open("GET", url, true);
+
+    request.onload = function () {
+      if (this.status >= 200 && this.status < 400) {
+        let data = xmlToJson(this.responseXML);
+        let response =
+          data["SOAP-ENV:Envelope"]["SOAP-ENV:Body"].SearchResponse.SearchResult
+            .List["#text"];
+        resolve(response.split("#")[3]);
+      } else {
+        reject("error");
       }
-    }
-  }
-  return cqlFilter;
-};
+    };
+
+    request.onerror = function () {
+      reject("error en la solicitud");
+    };
+
+    request.send();
+  });
+}
+
+function getCQLFilter(objectId, capa, distancia) {
+  return new Promise(function (resolve, reject) {
+    var request = new XMLHttpRequest();
+
+    const url = new URL(
+      "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SpatialSearchService/services"
+    );
+
+    url.searchParams.append("SERVICE", "DV");
+    url.searchParams.append("TYPENAME", "carto.v111_codigo_postal");
+    url.searchParams.append("CQL_FILTER", `OBJECTID=${objectId}`);
+    url.searchParams.append("PROPERTYNAME", "OBJECTID");
+    url.searchParams.append("TYPENAME_CONN", "DV");
+
+    request.open("POST", url, true);
+    request.setRequestHeader(
+      "Content-Type",
+      "application/x-www-form-urlencoded; charset=UTF-8"
+    );
+
+    let cqlFilter = `objectid=${objectId}`;
+
+    request.onload = function () {
+      if (this.status >= 200 && this.status < 400) {
+        let data = JSON.parse(this.response);
+        for (let resultado of data.resultados) {
+          if (
+            resultado.distancia === distancia &&
+            resultado.capa.includes(capa)
+          ) {
+            for (let feature of resultado.featureCollection.features) {
+              // cqlFilter += cqlFilter !== '' ? ' OR ' : '';
+              cqlFilter += ` OR objectid=${feature.properties.objectid}`;
+            }
+            break;
+          }
+        }
+        resolve(cqlFilter);
+      } else {
+        reject("error");
+      }
+    };
+
+    request.onerror = function () {
+      reject("error en la solicitud");
+    };
+
+    request.send();
+  });
+}
+
+function getWfsAsync(endpoint, capa, wms_srs, cqlFilter) {
+  return new Promise(function (resolve, reject) {
+    var request = new XMLHttpRequest();
+
+    const url = new URL(endpoint);
+
+    request.open("POST", url, true);
+    request.setRequestHeader(
+      "Content-Type",
+      "application/x-www-form-urlencoded; charset=UTF-8"
+    );
+
+    request.onload = function () {
+      if (this.status >= 200 && this.status < 400) {
+        resolve(JSON.parse(this.response));
+      } else {
+        reject("error");
+      }
+    };
+
+    request.onerror = function () {
+      reject("error en la solicitud");
+    };
+
+    const params = new URLSearchParams();
+    params.set("service", "WFS");
+    params.set("version", "1.0.0");
+    params.set("request", "GetFeature");
+    params.set("typename", capa);
+    params.set("outputFormat", "application/json");
+    params.set("srsname", wms_srs);
+    params.set("CQL_FILTER", cqlFilter);
+
+    request.send(params);
+  });
+}
 
 let getWFS = (endpoint, capa, wms_srs, cqlFilter) => {
   let data = null;
@@ -112,7 +184,7 @@ let getWFS = (endpoint, capa, wms_srs, cqlFilter) => {
   params.set("srsname", wms_srs);
   params.set("CQL_FILTER", cqlFilter);
   let xhr = new XMLHttpRequest();
-  xhr.open("POST", url.toString(), false);
+  xhr.open("POST", url.toString(), true);
   xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   xhr.send(params.toString());
   if (xhr.status == 200) {
@@ -166,46 +238,75 @@ let layerAragon = new ol.layer.Tile({
 });
 map.addLayer(layerAragon);
 
-let layerFianzas = new ol.layer.Tile({
-  source: new ol.source.TileWMS({
-    url: "https://idearagon.aragon.es/SITA_WMS",
-    params: {
-      LAYERS: "fianzas",
-      VERSION: "1.0.0",
-    },
-    projection: map_projection,
-  }),
-});
-// map.addLayer(layerFianzas);
+// Capa para las líneas de calles con datos
+let mapVectorLayer = new ol.layer.Vector({});
 
-let objectID = getObjectID("50001");
-let cqlFilter = getCQLFilter(objectID, "fianzas", 1000);
-let fianzasWfs = getWFS(
-  "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SITA_WMS",
-  "fianzas",
-  WMS_SRS,
-  cqlFilter
-);
-let cpWfs = getWFS(
-  "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/Visor2D",
-  "v111_codigo_postal",
-  WMS_SRS,
-  `objectid=${objectID}`
-);
-let bbox = getBBox(cpWfs.features);
+// Al enviar el formulario de búsqueda
+function buscar() {
+  console.log("buscar");
+  getObjectIdByCP(searchField.value).then(function (objectId) {
+    console.log(objectId);
+    getCQLFilter(objectId, "fianzas", 1000).then(function (cqlFilter) {
+      getWfsAsync(
+        "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/Visor2D",
+        "v111_codigo_postal",
+        WMS_SRS,
+        `objectid=${objectId}`
+      ).then(function(cpWfs){
+        let bbox = getBBox(cpWfs.features);
+        map.getView().fit(bbox, map.getSize());
+      });
+      getWfsAsync(URL_SITA, "fianzas", WMS_SRS, cqlFilter).then(function (
+        fianzasWfs
+      ) {
+        console.log(fianzasWfs);
+        let geojsonFormat = new ol.format.GeoJSON();
+        let features = geojsonFormat.readFeatures(JSON.stringify(fianzasWfs));
+      
+        let vector = new ol.layer.Vector({
+          source: new ol.source.Vector({
+            format: geojsonFormat,
+            features: features,
+          }),
+          features: geojsonFormat.readFeatures(JSON.stringify(fianzasWfs)),
+        });
+        map.addLayer(vector);
+      });
+    });
+  });
+}
 
-let geojsonFormat = new ol.format.GeoJSON();
-let features = geojsonFormat.readFeatures(JSON.stringify(fianzasWfs));
+function buscarOld() {
+  let objectID = getObjectID("50001");
+  let cqlFilter = getCQLFilter(objectID, "fianzas", 1000);
+  let fianzasWfs = getWFS(
+    "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SITA_WMS",
+    "fianzas",
+    WMS_SRS,
+    cqlFilter
+  );
+  let cpWfs = getWFS(
+    "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/Visor2D",
+    "v111_codigo_postal",
+    WMS_SRS,
+    `objectid=${objectID}`
+  );
+  let bbox = getBBox(cpWfs.features);
 
-let vector = new ol.layer.Vector({
-  source: new ol.source.Vector({
-    format: geojsonFormat,
-    features: features,
-  }),
-  features: geojsonFormat.readFeatures(JSON.stringify(fianzasWfs)),
-});
+  let geojsonFormat = new ol.format.GeoJSON();
+  let features = geojsonFormat.readFeatures(JSON.stringify(fianzasWfs));
 
-map.addLayer(vector);
+  let vector = new ol.layer.Vector({
+    source: new ol.source.Vector({
+      format: geojsonFormat,
+      features: features,
+    }),
+    features: geojsonFormat.readFeatures(JSON.stringify(fianzasWfs)),
+  });
+
+  map.addLayer(vector);
+  map.getView().fit(bbox, map.getSize());
+}
 
 let onFeatureSelectFuncion = (evt) => {
   let feature = evt.element;
@@ -294,11 +395,11 @@ let onFeatureSelectFuncion = (evt) => {
     contenidoPopup += `
     </div>
   </div>`;
-}
+  }
 
-    if (info.local_media > 5) {
-      hayDatos = true;
-      contenidoPopup += `
+  if (info.local_media > 5) {
+    hayDatos = true;
+    contenidoPopup += `
   <div>
     <p class="flex items-center gap-1 text-gray-800">
       <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -314,43 +415,43 @@ let onFeatureSelectFuncion = (evt) => {
     </div>
     <div class="pt-2 flex-col gap-3">`;
 
-      // Solo mostrar mínimo si hay valor
-      if (info.local_min > 0) {
-        contenidoPopup += `
+    // Solo mostrar mínimo si hay valor
+    if (info.local_min > 0) {
+      contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
           info.local_min
         )}</span>
         <span class="text-gray-600 text-sm tracking-tighter">mín.</span>
       </div>`;
-      }
+    }
 
-      // Solo mostrar máximo si hay valor
-      if (info.local_max > 0) {
-        contenidoPopup += `
+    // Solo mostrar máximo si hay valor
+    if (info.local_max > 0) {
+      contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
           info.local_max
         )}</span>
         <span class="text-gray-600 text-sm tracking-tighter">máx.</span>
       </div>`;
-      }
+    }
 
-      contenidoPopup += `
+    contenidoPopup += `
     </div>
   </div>`;
-    }
+  }
 
-    // Parte de abajo de la tarjetita
-    if (hayDatos) {
-      contenidoPopup += `
+  // Parte de abajo de la tarjetita
+  if (hayDatos) {
+    contenidoPopup += `
   </div>
   <p class="pt-3 text-sm text-gray-600">Datos de 2019</p>`;
-    } else {
-      contenidoPopup += `
+  } else {
+    contenidoPopup += `
   </div>
   <p class="pt-3 text-sm text-gray-600">No hay datos recientes</p>`;
-    }
+  }
 
   content.innerHTML = contenidoPopup;
   overlay.setPosition(coordinate);
@@ -364,4 +465,6 @@ map.on("pointermove", (evt) => {
   });
 });
 
-map.getView().fit(bbox, map.getSize());
+// Por defecto, cargar Aragón
+var bbox_aragon = [571580, 4412223, 812351, 4756639];
+map.getView().fit(bbox_aragon, map.getSize());
