@@ -241,9 +241,19 @@ let onFeatureSelectFuncion = (evt) => {
 
   var coordinate = evt.coordinate;
   var hdms = ol.coordinate.toStringHDMS(ol.proj.toLonLat(coordinate));
+
+  // TODO: sacar a su propia función, es muy largo aquí.
   var contenidoPopup = `
 <span class="font-bold text-lg leading-none">${info.via_loc}</span>
 <div class="pt-2 flex gap-5">
+`;
+
+  var hayDatos = false; // si ni viviendas ni locales tienen media > 0, mostrar solo un mensajito que ponga que no hay datos recientes
+
+  // Av. Pirineos
+  if (info.vivienda_media > 5) {
+    hayDatos = true;
+    contenidoPopup += `
   <div>
     <p class="flex items-center gap-1 text-gray-800">
       <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,21 +267,38 @@ let onFeatureSelectFuncion = (evt) => {
       )}</span>
       <span class="text-gray-600 tracking-tighter">media</span>
     </div>
-    <div class="pt-2 flex-col gap-3">
+    <div class="pt-2 flex-col gap-3">`;
+
+    // Solo mostrar mínimo si hay valor
+    if (info.vivienda_min > 0) {
+      contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
           info.vivienda_min
         )}</span>
         <span class="text-gray-600 text-sm tracking-tighter">mín.</span>
-      </div>
+      </div>`;
+    }
+
+    // Solo mostrar máximo si hay valor
+    if (info.vivienda_max > 0) {
+      contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
           info.vivienda_max
         )}</span>
         <span class="text-gray-600 text-sm tracking-tighter">máx.</span>
-      </div>
+      </div>`;
+    }
+
+    contenidoPopup += `
     </div>
-  </div>
+  </div>`;
+}
+
+    if (info.local_media > 5) {
+      hayDatos = true;
+      contenidoPopup += `
   <div>
     <p class="flex items-center gap-1 text-gray-800">
       <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -285,28 +312,48 @@ let onFeatureSelectFuncion = (evt) => {
       )}</span>
       <span class="text-gray-600 tracking-tighter">media</span>
     </div>
-    <div class="pt-2 flex-col gap-3">
+    <div class="pt-2 flex-col gap-3">`;
+
+      // Solo mostrar mínimo si hay valor
+      if (info.local_min > 0) {
+        contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
           info.local_min
         )}</span>
         <span class="text-gray-600 text-sm tracking-tighter">mín.</span>
-      </div>
+      </div>`;
+      }
+
+      // Solo mostrar máximo si hay valor
+      if (info.local_max > 0) {
+        contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
           info.local_max
         )}</span>
         <span class="text-gray-600 text-sm tracking-tighter">máx.</span>
-      </div>
+      </div>`;
+      }
+
+      contenidoPopup += `
     </div>
+  </div>`;
+    }
+
+    // Parte de abajo de la tarjetita
+    if (hayDatos) {
+      contenidoPopup += `
   </div>
-</div>
-<p class="pt-3 text-sm text-gray-600">Datos de 2019</p>`;
+  <p class="pt-3 text-sm text-gray-600">Datos de 2019</p>`;
+    } else {
+      contenidoPopup += `
+  </div>
+  <p class="pt-3 text-sm text-gray-600">No hay datos recientes</p>`;
+    }
 
   content.innerHTML = contenidoPopup;
   overlay.setPosition(coordinate);
-
-  console.log(info);
 };
 
 map.on("pointermove", (evt) => {

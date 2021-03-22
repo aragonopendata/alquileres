@@ -17,6 +17,7 @@ La fuente principal de los datos es el IGEAR y sus servicios de mapas web.
     - Aviso legal
     - Política de privacidad
     - Código fuente
+    - Logo FEDER
 - Backend/bypass para obtención datos y búsqueda por CP
 - Documentación, comentar más
 
