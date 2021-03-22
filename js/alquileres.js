@@ -290,6 +290,14 @@ function buscar() {
             features: features,
           }),
           features: geojsonFormat.readFeatures(JSON.stringify(fianzasWfs)),
+          style: function(feature, resolution) {
+            return new ol.style.Style({
+              stroke: new ol.style.Stroke({
+                  color: '#68a4b4',
+                  width: 3
+              })
+            })
+          }
         });
         map.addLayer(vector);
         showSearchSucccess(codigoPostal)
