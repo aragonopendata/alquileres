@@ -252,7 +252,7 @@ function showSearchSucccess(codigoPostal) {
     <span class="font-bold text-3xl">${codigoPostal}</span>
   </div>
   <div>
-    <button type="submit" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    <button type="submit" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
       Buscar otro
     </button>
   </div>
@@ -466,3 +466,9 @@ map.on("pointermove", (evt) => {
 // Por defecto, cargar Aragón
 var bbox_aragon = [571580, 4412223, 812351, 4756639];
 map.getView().fit(bbox_aragon, map.getSize());
+
+window.onresize = function()
+{
+  setTimeout( function() { map.updateSize();}, 200);
+}
+map.updateSize();

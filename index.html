@@ -17,12 +17,15 @@
       href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
       rel="stylesheet"
     />
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <title>Alquileres de Aragón (prototipo) - Aragón Open Data</title>
     <style>
       * {
-        font-family: 'Inter', sans-serif;
+        font-family: "Inter", sans-serif;
       }
       .ol-popup {
         position: absolute;
@@ -44,8 +47,8 @@
     </style>
   </head>
 
-  <body class="font-sans">
-    <div class="flex flex-col h-screen">
+  <body class="font-sans overscroll-y-none overflow-hidden">
+    <div class="flex flex-col min-h-screen">
       <!-- Menú superior -->
       <nav class="pt-4 pb-5 px-4 border-b-4 flex justify-between">
         <h1 class="font-semibold text-lg flex items-center gap-4">
@@ -77,9 +80,11 @@
       </nav>
 
       <!-- Mapa -->
-      <div id="map" class="map w-full flex-grow flex-1"></div>
+      <div class=" flex-1">
+        <div id="map" class="absolute w-full h-full overflow-hidden"></div>
+      </div>
 
-      <footer class="p-2 border-t-2 flex justify-between">
+      <footer class="bg-white z-10 p-2 border-t-2 flex justify-between flex-grow-0 flex-auto">
         <div class="flex items-center gap-2">
           <a href="https://aragon.es"
             ><img src="img/logo-ga.svg" alt="Gobierno de Aragón" class="h-8"
@@ -104,13 +109,12 @@
           </li>
         </ul>
       </footer>
+    </div>
 
       <!-- Popup precios -->
       <div id="popup" class="ol-popup">
         <div id="popup-content"></div>
       </div>
-    </div>
-
     <script src="js/alquileres.js"></script>
   </body>
 </html>
