@@ -463,6 +463,14 @@ map.on("pointermove", (evt) => {
   });
 });
 
+map.on("click", (evt) => {
+  var pixel = map.getEventPixel(evt.originalEvent);
+  map.forEachFeatureAtPixel(pixel, function (feature, resolution) {
+    evt.element = feature;
+    onFeatureSelectFuncion(evt);
+  });
+});
+
 // Por defecto, cargar Aragón
 var bbox_aragon = [571580, 4412223, 812351, 4756639];
 map.getView().fit(bbox_aragon, map.getSize());
