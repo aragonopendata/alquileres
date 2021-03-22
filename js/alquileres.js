@@ -10,10 +10,11 @@ var closer = document.getElementById("popup-closer");
 
 // Búsqueda
 var searchField = document.getElementById("search");
+var resultsHolder = document.getElementById("results");
 
 var overlay = new ol.Overlay({
   element: container,
-  autoPan: true,
+  autoPan: false,
   autoPanAnimation: {
     duration: 250,
   },
@@ -41,7 +42,7 @@ let xmlToJson = (xml) => {
       } else {
         if (typeof obj[nodeName].push == "undefined") {
           let old = obj[nodeName];
-          obj[nodeName] = [];
+          obj[nodeName] = [];el.style.display = 'none';
           obj[nodeName].push(old);
         }
         obj[nodeName].push(xmlToJson(item));
@@ -172,27 +173,6 @@ function getWfsAsync(endpoint, capa, wms_srs, cqlFilter) {
   });
 }
 
-let getWFS = (endpoint, capa, wms_srs, cqlFilter) => {
-  let data = null;
-  const url = new URL(endpoint);
-  const params = new URLSearchParams();
-  params.set("service", "WFS");
-  params.set("version", "1.0.0");
-  params.set("request", "GetFeature");
-  params.set("typename", capa);
-  params.set("outputFormat", "application/json");
-  params.set("srsname", wms_srs);
-  params.set("CQL_FILTER", cqlFilter);
-  let xhr = new XMLHttpRequest();
-  xhr.open("POST", url.toString(), true);
-  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  xhr.send(params.toString());
-  if (xhr.status == 200) {
-    data = JSON.parse(xhr.responseText);
-    console.log(data);
-  }
-  return data;
-};
 
 let getBBox = (features) => {
   let bbox = [Infinity, Infinity, -Infinity, -Infinity];
@@ -241,12 +221,54 @@ map.addLayer(layerAragon);
 // Capa para las líneas de calles con datos
 let mapVectorLayer = new ol.layer.Vector({});
 
+function showSearchField(show) {
+  search.disabled = !show;
+  if(!show){
+    search.classList.add("hidden")
+    resultsHolder.classList.remove("hidden")
+  } else {
+    search.classList.remove("hidden")
+    resultsHolder.classList.add("hidden")
+    search.focus()
+  }
+}
+
+function updateLoadingText(text) {
+  resultsHolder.innerHTML = `
+  <div type="button" class="inline-flex items-center px-4 py-2text-base leading-6 font-medium rounded-md" disabled="">
+  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+  ${text}
+</div>
+`
+}
+
+function showSearchSucccess(codigoPostal) {
+  resultsHolder.innerHTML = `<form class="flex items-center gap-5" onsubmit="event.preventDefault(); showSearchField(true)">
+  <div class="flex flex-col">
+    <span class="text-gray-700">Código postal</span>
+    <span class="font-bold text-3xl">${codigoPostal}</span>
+  </div>
+  <div>
+    <button type="submit" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+      Buscar otro
+    </button>
+  </div>
+</form>`
+}
+
 // Al enviar el formulario de búsqueda
 function buscar() {
-  console.log("buscar");
-  getObjectIdByCP(searchField.value).then(function (objectId) {
-    console.log(objectId);
+  var codigoPostal = searchField.value
+
+  showSearchField(false)
+  updateLoadingText(`<p>Localizando ${codigoPostal}...</p>`)
+
+  getObjectIdByCP(codigoPostal).then(function (objectId) {
     getCQLFilter(objectId, "fianzas", 1000).then(function (cqlFilter) {
+      updateLoadingText(`<p>Cargando datos de alquileres...</p>`)
       getWfsAsync(
         "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/Visor2D",
         "v111_codigo_postal",
@@ -259,7 +281,6 @@ function buscar() {
       getWfsAsync(URL_SITA, "fianzas", WMS_SRS, cqlFilter).then(function (
         fianzasWfs
       ) {
-        console.log(fianzasWfs);
         let geojsonFormat = new ol.format.GeoJSON();
         let features = geojsonFormat.readFeatures(JSON.stringify(fianzasWfs));
       
@@ -271,41 +292,10 @@ function buscar() {
           features: geojsonFormat.readFeatures(JSON.stringify(fianzasWfs)),
         });
         map.addLayer(vector);
+        showSearchSucccess(codigoPostal)
       });
     });
   });
-}
-
-function buscarOld() {
-  let objectID = getObjectID("50001");
-  let cqlFilter = getCQLFilter(objectID, "fianzas", 1000);
-  let fianzasWfs = getWFS(
-    "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/SITA_WMS",
-    "fianzas",
-    WMS_SRS,
-    cqlFilter
-  );
-  let cpWfs = getWFS(
-    "https://cors-anywhere.herokuapp.com/https://idearagon.aragon.es/Visor2D",
-    "v111_codigo_postal",
-    WMS_SRS,
-    `objectid=${objectID}`
-  );
-  let bbox = getBBox(cpWfs.features);
-
-  let geojsonFormat = new ol.format.GeoJSON();
-  let features = geojsonFormat.readFeatures(JSON.stringify(fianzasWfs));
-
-  let vector = new ol.layer.Vector({
-    source: new ol.source.Vector({
-      format: geojsonFormat,
-      features: features,
-    }),
-    features: geojsonFormat.readFeatures(JSON.stringify(fianzasWfs)),
-  });
-
-  map.addLayer(vector);
-  map.getView().fit(bbox, map.getSize());
 }
 
 let onFeatureSelectFuncion = (evt) => {

@@ -16,8 +16,13 @@
       href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"> 
     <title>Alquileres de Aragón (prototipo) - Aragón Open Data</title>
     <style>
+      * {
+        font-family: 'Inter', sans-serif;
+      }
       .ol-popup {
         position: absolute;
         background-color: white;
@@ -51,16 +56,23 @@
           /></a>
           <span class="pt-2">Alquileres</span>
         </h1>
-        <form onsubmit="event.preventDefault(); buscar()">
-          <input
-            autofocus
-            class="border-4 px-4 py-2"
-            type="text"
-            name="search"
-            id="search"
-            placeholder="Buscar"
-          />
-        </form>
+        <div>
+          <form onsubmit="event.preventDefault(); buscar()">
+            <input
+              autofocus
+              required
+              class="border-4 px-4 py-2"
+              name="search"
+              id="search"
+              placeholder="Buscar"
+              type="text"
+              spellcheck="false"
+              pattern="[0-9]*"
+              inputmode="numeric"
+            />
+          </form>
+          <div id="results" class="hidden"></div>
+        </div>
       </nav>
 
       <!-- Mapa -->
