@@ -47,6 +47,14 @@ const DEFAULT_REQUEST_TIMEOUT = 10000;
 
 const TEXT_ERROR_GENERIC =
   "Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde."; // Mensaje a mostrar a los usuarios cuando pasa algo raro, falla una petición, etc. TODO mejorar
+  
+// --
+// Otros
+// --
+
+// Valor mínimo a partir del que mostrar datos.
+// En algunos sitios mostraría alquileres de 3 €, por eso se ha puesto mínimo 5.
+const POPUP_VALUE_TO_SHOW = 5;
 
 // -------------
 
@@ -541,7 +549,7 @@ let onFeatureSelectFuncion = (evt) => {
   let hayDatos = false; // si ni viviendas ni locales tienen media > 0, mostrar solo un mensajito que ponga que no hay datos recientes
 
   // TODO documentar
-  if (info.vivienda_media > 5) {
+  if (info.vivienda_media > POPUP_VALUE_TO_SHOW) {
     hayDatos = true;
     contenidoPopup += `
   <div>
@@ -560,7 +568,7 @@ let onFeatureSelectFuncion = (evt) => {
     <div class="pt-2 flex-col gap-3">`;
 
     // Solo mostrar mínimo si hay valor
-    if (info.vivienda_min > 0) {
+    if (info.vivienda_min > POPUP_VALUE_TO_SHOW) {
       contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
@@ -571,7 +579,7 @@ let onFeatureSelectFuncion = (evt) => {
     }
 
     // Solo mostrar máximo si hay valor
-    if (info.vivienda_max > 0) {
+    if (info.vivienda_max > POPUP_VALUE_TO_SHOW) {
       contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
@@ -586,7 +594,7 @@ let onFeatureSelectFuncion = (evt) => {
   </div>`;
   }
 
-  if (info.local_media > 5) {
+  if (info.local_media > POPUP_VALUE_TO_SHOW) {
     hayDatos = true;
     contenidoPopup += `
   <div>
@@ -605,7 +613,7 @@ let onFeatureSelectFuncion = (evt) => {
     <div class="pt-2 flex-col gap-3">`;
 
     // Solo mostrar mínimo si hay valor
-    if (info.local_min > 0) {
+    if (info.local_min > POPUP_VALUE_TO_SHOW) {
       contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
@@ -616,7 +624,7 @@ let onFeatureSelectFuncion = (evt) => {
     }
 
     // Solo mostrar máximo si hay valor
-    if (info.local_max > 0) {
+    if (info.local_max > POPUP_VALUE_TO_SHOW) {
       contenidoPopup += `
       <div>
         <span class="font-semibold text-lg">${formatter.format(
