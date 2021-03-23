@@ -1,12 +1,21 @@
 "use strict";
 
+// TODO: hacer que el CORS sea configurable en runtime con una alerta si detecta
+// que pudiera estar fallando la petición por eso. 
+
+// TODO: el archivo es muy largo. No vendría mal separarlo por temática.
+
 // -------------
 //
 // Configuración
 //
 // -------------
 
-const URL_CORS_PREFIX = "https://cors-anywhere.herokuapp.com/";
+// --
+// Servicios externos
+// --
+
+const URL_CORS_PREFIX = "https://cors-anywhere.herokuapp.com/"; // TODO hacer configurable en runtime. Este servicio es gratuito y hay que buscar una solución lo antes posible.
 
 // Para obtener los datos de las fianzas
 const URL_SITA = URL_CORS_PREFIX + "https://idearagon.aragon.es/SITA_WMS";
@@ -32,13 +41,35 @@ const MAPA_WMS_VERSION = "1.1.1";
 // Tiempo que esperar antes de dar por perdida una petición
 const DEFAULT_REQUEST_TIMEOUT = 10000;
 
+// --
+// Textos
+// --
+
+const TEXT_ERROR_GENERIC =
+  "Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde."; // Mensaje a mostrar a los usuarios cuando pasa algo raro, falla una petición, etc. TODO mejorar
+
 // -------------
 
-// Popup
+// Caché de resultados:
+//
+// Si lo ususarios buscan un CP que ya hemos obtenido en la misma sesión,
+// mandarles a la ubicación sin hacer ninguna petición.
+// la clave es el número del código postal, en formato string
+// el valor es el bounding box obtenido del código postal
+//
+// Fuente: https://slynova.io/create-a-simple-cache-system/
+const cache = new Map();
+
+// --
+// Tooltip/popup alquileres
+// --
+
+// Elementos
 var container = document.getElementById("popup");
 var content = document.getElementById("popup-content");
-var closer = document.getElementById("popup-closer");
 
+// Esta overlay es la que se usa para mostrar el tooltip al pasar el ratón sobre
+// una calle con datos de alquileres.
 var overlay = new ol.Overlay({
   element: container,
   autoPan: false,
@@ -87,6 +118,7 @@ let xmlToJson = (xml) => {
   return obj;
 };
 
+// TODO documentar
 function getObjectIdByCP(cp) {
   return new Promise(function (resolve, reject) {
     let request = new XMLHttpRequest();
@@ -132,6 +164,7 @@ function getObjectIdByCP(cp) {
   });
 }
 
+// TODO documentar
 function getCQLFilter(objectId, capa, distancia) {
   return new Promise(function (resolve, reject) {
     var request = new XMLHttpRequest();
@@ -169,12 +202,12 @@ function getCQLFilter(objectId, capa, distancia) {
         }
         resolve(cqlFilter);
       } else {
-        reject("error");
+        reject(TEXT_ERROR_GENERIC); // TODO mejorar error
       }
     };
 
     request.onerror = function () {
-      reject("error en la solicitud");
+      reject(TEXT_ERROR_GENERIC); // TODO mejorar error
     };
 
     request.timeout = DEFAULT_REQUEST_TIMEOUT;
@@ -182,6 +215,7 @@ function getCQLFilter(objectId, capa, distancia) {
   });
 }
 
+// TODO documentar
 function getWfsAsync(endpoint, capa, wms_srs, cqlFilter) {
   return new Promise(function (resolve, reject) {
     var request = new XMLHttpRequest();
@@ -198,12 +232,12 @@ function getWfsAsync(endpoint, capa, wms_srs, cqlFilter) {
       if (this.status >= 200 && this.status < 400) {
         resolve(JSON.parse(this.response));
       } else {
-        reject("error");
+        reject(TEXT_ERROR_GENERIC); // TODO mejorar error
       }
     };
 
     request.onerror = function () {
-      reject("error en la solicitud");
+      reject(TEXT_ERROR_GENERIC); // TODO mejorar error
     };
 
     const params = new URLSearchParams();
@@ -220,6 +254,9 @@ function getWfsAsync(endpoint, capa, wms_srs, cqlFilter) {
   });
 }
 
+// Obtener la bounding box de un array de features.
+// El resultado se le puede pasar a map.fit() para centrar el mapa en su
+// ubicación aproximada.
 let getBBox = (features) => {
   let bbox = [Infinity, Infinity, -Infinity, -Infinity];
   for (let feature of features) {
@@ -237,7 +274,8 @@ let getBBox = (features) => {
   return bbox;
 };
 
-let WMS_SRS = "EPSG:25830";
+// Ajustes para el mapa
+let WMS_SRS = "EPSG:25830"; // Esto tiene que ir así.
 let map_projection = new ol.proj.Projection({
   code: WMS_SRS,
   units: "m",
@@ -245,12 +283,15 @@ let map_projection = new ol.proj.Projection({
 let options = {
   projection: map_projection,
 };
-let map = new ol.Map({
+
+// Definición del mapa de OpenLayers como tal
+var map = new ol.Map({
   target: "map",
   view: new ol.View(options),
   overlays: [overlay],
 });
 
+// La capa donde se ve el nombre de las calles, municipio, etc.
 let layerAragon = new ol.layer.Tile({
   source: new ol.source.TileWMS({
     url: MAPA_WMS_URL,
@@ -266,6 +307,8 @@ map.addLayer(layerAragon);
 // Capa para las líneas de calles con datos
 let mapVectorLayer = new ol.layer.Vector({});
 
+// Ocultar o mostrar el buscador.
+// Cuando se oculta, se muestra el contenedor de los resultados.
 function showSearchField(show) {
   search.disabled = !show;
   if (!show) {
@@ -280,6 +323,7 @@ function showSearchField(show) {
   }
 }
 
+// Muestra un spinner que gira y un texto a su izquierda.
 function updateLoadingText(text) {
   resultsHolder.innerHTML = `
   <div type="button" class="inline-flex items-center px-4 py-2 text-base leading-6 font-medium rounded-md" disabled="">
@@ -292,6 +336,9 @@ function updateLoadingText(text) {
 `;
 }
 
+// Muestra el código postal en grande y un botón para volver al buscador.
+// Usa el mismo contenedor que updateLoadingText, por lo que no puede aparecer
+// al mismo tiempo.
 function showSearchSucccess(codigoPostal) {
   resultsHolder.innerHTML = `<form class="flex items-center gap-5 pl-2 lg:pl-0" onsubmit="event.preventDefault(); showSearchField(true)">
   <div class="flex flex-col">
@@ -306,6 +353,8 @@ function showSearchSucccess(codigoPostal) {
 </form>`;
 }
 
+// Para mostrar el cuadro de búsqueda con un texto en rojo y un iconito. Cuando
+// algo ha salido mal o no se pasa la validación.
 function showSearchError(message) {
   if (message == null) {
     message = "Ha ocurrido un error";
@@ -321,6 +370,8 @@ function showSearchError(message) {
   showSearchField(true);
 }
 
+// Quitar la capa que sale por encima del mapa al cargar para evitar que los
+// usuarios se pongan a explorar por él si tener datos. Evita confusión. Creo.
 function removeWelcomeOverlay() {
   let mapBlockingOverlay = document.getElementById("map-overlay");
   mapBlockingOverlay.classList.add("hidden");
@@ -329,6 +380,7 @@ function removeWelcomeOverlay() {
 }
 
 // Al enviar el formulario de búsqueda
+// TODO documentar
 function buscar() {
   // Limpiar el CP que hemos recibido
   let codigoPostal = searchField.value;
@@ -354,14 +406,36 @@ function buscar() {
     return;
   }
 
-  searchLabel.innerHTML = "Buscar por código postal"; // Reseteamos el mensaje de error
+  searchLabel.innerHTML = "Buscar por código postal"; // Reseteamos el mensaje de error si lo hubiera, para que la próxima vez que se muestre el cuadro de búsqueda, el label sea normal. TODO mover a showSearch?
 
-  removeWelcomeOverlay();
+  removeWelcomeOverlay(); // quitar la capa por encima con el mensajito de inicio
 
   // Ocultar la búsqueda y desactivarla para evitar doble envío
   showSearchField(false);
   updateLoadingText(`<p>Localizando el ${codigoPostal}...</p>`);
 
+  // Comprobar si ya habíamos obtenido los datos del CP en caso afirmativo, no
+  // hacemos ninguna petición y movemos inmediatamente el mapa a la ubicación
+  if (cache.has(codigoPostal)) {
+    map.getView().fit(cache.get(codigoPostal), map.getSize());
+    showSearchSucccess(codigoPostal);
+    return;
+  }
+
+  // Esta cadena de promesas es donde se hace prácticamente todo lo relacionado
+  // con la búsqueda del código postal. Se ejecuta de forma asíncrona, pero para
+  // evitar saltos raros y spam inintencionado, solo se puede buscar un CP a la vez.
+  //
+  // Esto es más o menos lo que hacemos ahora:
+  //
+  // 1. Solicitar el objectId en el mapa del código postal
+  // 2. Solicitar los objectid de las calles dentro del CP y generar un filtro ,
+  // 3. Solicitar el GeoJSON del objectId del código postal
+  //     - Obtener el bounding box en base al GeoJSON
+  //     - Mover el mapa al sitio
+  // 4. Solicitar los datos para las calles aplicando el filtro
+  //     - Pintar las líneas vectoriales
+  //
   getObjectIdByCP(codigoPostal)
     .then(function (objectId) {
       getCQLFilter(objectId, "fianzas", 1000)
@@ -375,6 +449,7 @@ function buscar() {
           )
             .then(function (cpWfs) {
               let bbox = getBBox(cpWfs.features);
+              cache.set(codigoPostal, bbox);
               map.getView().fit(bbox, map.getSize());
             })
             .catch(function (error) {
@@ -420,6 +495,7 @@ function buscar() {
     });
 }
 
+// TODO documentar
 let onFeatureSelectFuncion = (evt) => {
   let feature = evt.element;
   let info = {
@@ -446,6 +522,7 @@ let onFeatureSelectFuncion = (evt) => {
     }
   }
 
+  // TODO documentar
   let formatter = new Intl.NumberFormat("es-ES", {
     style: "currency",
     currency: "EUR",
@@ -463,7 +540,7 @@ let onFeatureSelectFuncion = (evt) => {
 
   let hayDatos = false; // si ni viviendas ni locales tienen media > 0, mostrar solo un mensajito que ponga que no hay datos recientes
 
-  // Av. Pirineos
+  // TODO documentar
   if (info.vivienda_media > 5) {
     hayDatos = true;
     contenidoPopup += `
@@ -569,6 +646,7 @@ let onFeatureSelectFuncion = (evt) => {
   overlay.setPosition(coordinate);
 };
 
+// TODO documentar
 map.on("pointermove", (evt) => {
   let pixel = map.getEventPixel(evt.originalEvent);
   map.forEachFeatureAtPixel(pixel, function (feature, resolution) {
@@ -577,6 +655,7 @@ map.on("pointermove", (evt) => {
   });
 });
 
+// TODO documentar
 map.on("click", (evt) => {
   let pixel = map.getEventPixel(evt.originalEvent);
   map.forEachFeatureAtPixel(pixel, function (feature, resolution) {
@@ -589,6 +668,7 @@ map.on("click", (evt) => {
 let bbox_aragon = [571580, 4412223, 812351, 4756639];
 map.getView().fit(bbox_aragon, map.getSize());
 
+// TODO documentar
 window.onresize = function () {
   setTimeout(function () {
     map.updateSize();

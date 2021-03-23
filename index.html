@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
+  <!--TODO mejorar headers, añadir idioma-->
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta content="utf-8" http-equiv="encoding" />
-    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0,
+    user-scalable=no" />
+    <!--TODO mejorar formato-->
     <link
       rel="stylesheet"
       href="css/vendor/ol.css"
@@ -13,21 +16,25 @@
       src="js/vendor/ol.js"
       type="text/javascript"
     ></script>
+    <!--TODO alojar bien con gestor de dependencias y purgeCSS. Es muy gordo
+    para producción. -->
     <link
       href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <!--TODO self-host-->
     <link rel="preconnect" href="https://fonts.gstatic.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
     <title>Alquileres de Aragón (prototipo) - Aragón Open Data</title>
+    <!--TODO mover a su propio archivo-->
     <style>
       * {
         font-family: "Inter", sans-serif;
       }
-      .ol-popup {
+      .ol-popup { /* TODO pasarlo a clases Tailwind */
         position: absolute;
         background-color: white;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
@@ -64,6 +71,7 @@
           <span class="pt-3 lg:pt-2 font-semibold lg:text-lg">Alquileres</span>
         </h1>
         <div>
+          <!-- Buscador -->
           <form id="search-form" class="mt-3 mb-2 pl-2 flex flex-col" onsubmit="event.preventDefault(); buscar()">
             <label class="pb-1" id="search-label" for="search">Buscar por código postal</label>
             <input
@@ -77,6 +85,7 @@
               inputmode="numeric"
             />
           </form>
+          <!-- Contenedor resultados -->
           <div id="results" class="hidden"></div>
         </div>
       </nav>
@@ -84,6 +93,7 @@
       <!-- Mapa -->
       <div class=" flex-1">
         <div id="map" class="absolute w-full h-full overflow-hidden opacity-10"></div>
+         <!-- Capa por encima del mapa antes de buscar -->
         <div id="map-overlay" class="p-4 absolute w-full h-full
         overflow-hidden">
           <div class="flex justify-center lg:justify-between">
@@ -107,11 +117,11 @@
           <a href="https://aragon.es">
             <img src="img/logo-ga.svg" alt="Gobierno de Aragón" class="h-8
             hidden lg:block"/>
+            <!-- En móviles mostrar el minilogo mejor -->
             <img src="img/logo-ga-mini.svg" alt="Gobierno de Aragón" class="h-8 w-8
             lg:hidden"/>
-            
           </a>
-          <span class="text-sm hidden lg:block">&copy; 2021</span>
+          <span class="text-sm hidden lg:block">&copy; 2021</span> <!-- TODO ¿Es necesario? -->
         </div>
         <ul class="flex gap-3 text-gray-800 underline pt-1 font-sm lg:font-base text-gray-700">
           <li>
@@ -135,6 +145,8 @@
         </ul>
       </footer>
     </div>
+
+    <!-- TODO Google Analytics y cookies -->
 
       <!-- Popup precios -->
       <div id="popup" class="ol-popup">
