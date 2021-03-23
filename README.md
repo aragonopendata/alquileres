@@ -15,9 +15,12 @@ Es una web estática sin mayor complicación.
 - Se despliega la carpeta entera.
 - No hay secretos ni variables de configuración.
 
+(por ahora)
+
 ### Backend
 
-> pendiente
+> Está por ver qué servicio de búsqueda de códigos postales se acaba usando. Por
+> ahora lo dejo sin documentar.
 
 ## Pendiente
 
@@ -28,7 +31,7 @@ Es una web estática sin mayor complicación.
     - Mensaje de cookies
     - Página de cookies
 - Footer con enlaces
-    - Logo FEDER
+    - Logo FEDER?
 - Backend/bypass para obtención datos y búsqueda por CP
 - Documentación, comentar más
 
