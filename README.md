@@ -5,6 +5,20 @@ código postal de Aragón.
 
 La fuente principal de los datos es el IGEAR y sus servicios de mapas web.
 
+## Despliegue
+
+### Frontend
+
+Es una web estática sin mayor complicación.
+
+- No hay que ejecutar ningún archivo. 
+- Se despliega la carpeta entera.
+- No hay secretos ni variables de configuración.
+
+### Backend
+
+> pendiente
+
 ## Pendiente
 
 - PWA
@@ -14,9 +28,6 @@ La fuente principal de los datos es el IGEAR y sus servicios de mapas web.
     - Mensaje de cookies
     - Página de cookies
 - Footer con enlaces
-    - Aviso legal
-    - Política de privacidad
-    - Código fuente
     - Logo FEDER
 - Backend/bypass para obtención datos y búsqueda por CP
 - Documentación, comentar más
