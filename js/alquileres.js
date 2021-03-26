@@ -15,22 +15,35 @@
 // Servicios externos
 // --
 
-const URL_CORS_PREFIX = "https://cors-anywhere.herokuapp.com/"; // TODO hacer configurable en runtime. Este servicio es gratuito y hay que buscar una solución lo antes posible.
+// TODO hacer configurable en runtime. 
+
+const URL_CORS_PREFIX = "";
+// const URL_CORS_PREFIX = "https://cors-anywhere.herokuapp.com/"; // Este servicio es gratuito y hay que buscar una solución lo antes posible.
 
 // Para obtener los datos de las fianzas
-const URL_SITA = URL_CORS_PREFIX + "https://idearagon.aragon.es/SITA_WMS";
+const URL_SITA = URL_CORS_PREFIX + "https://idearagondes.aragon.es/SITA_WMS";
+// const URL_SITA = URL_CORS_PREFIX + "https://idearagon.aragon.es/SITA_WMS"; //
+// PRO
 
 // Para obtener el object id de un código postal
 const URL_SERVICIO_CP =
   URL_CORS_PREFIX +
-  "https://idearagon.aragon.es/SimpleSearchService/typedSearchService";
+  "https://idearagondes.aragon.es/SimpleSearchService/typedSearchService";
+//const URL_SERVICIO_CP =
+//  URL_CORS_PREFIX +
+//  "https://idearagon.aragon.es/SimpleSearchService/typedSearchService"; // PRO
 
 // Para obtener las features dentro de un código postal (object id)
 const URL_SERVICIO_BUSQUEDA_ESPACIAL =
-  URL_CORS_PREFIX + "https://idearagon.aragon.es/SpatialSearchService/services";
+  URL_CORS_PREFIX + "https://idearagondes.aragon.es/SpatialSearchService/services";
+//const URL_SERVICIO_BUSQUEDA_ESPACIAL =
+//  URL_CORS_PREFIX +
+//  "https://idearagon.aragon.es/SpatialSearchService/services"; // PRO
 
 const URL_SERVICIO_ALQUILERES =
-  URL_CORS_PREFIX + "https://idearagon.aragon.es/Visor2D";
+  URL_CORS_PREFIX + "https://idearagondes.aragon.es/Visor2D";
+//const URL_SERVICIO_ALQUILERES =
+//    URL_CORS_PREFIX + "https://idearagon.aragon.es/Visor2D"; // PRO
 
 // Configuración de la fuente de imágenes de fondo
 const MAPA_WMS_URL =
