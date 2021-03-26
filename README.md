@@ -59,3 +59,10 @@ Licencia Pública de la Unión Europea v1.2.
 ## Financiación
 
 Financiado con el Fondo Europeo de Desarrollo Regional.
+
+## CORS
+
+Para pruebas en local, el CORS no permite las conexiones. Para arreglarlo hay
+que instalar y usar una extensión de navegador.
+
+- En Firefox: [CORS Everywhere](https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/)

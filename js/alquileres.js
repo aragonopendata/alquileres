@@ -17,39 +17,32 @@
 
 // TODO hacer configurable en runtime. 
 
-const URL_CORS_PREFIX = "";
-// const URL_CORS_PREFIX = "https://cors-anywhere.herokuapp.com/"; // Este servicio es gratuito y hay que buscar una solución lo antes posible.
+const APP_DEBUG = true
+const APP_USE_DEV_SERVERS = false
 
 // Para obtener los datos de las fianzas
-const URL_SITA = URL_CORS_PREFIX + "https://idearagondes.aragon.es/SITA_WMS";
-// const URL_SITA = URL_CORS_PREFIX + "https://idearagon.aragon.es/SITA_WMS"; //
-// PRO
+var URL_SITA = "https://idearagon.aragon.es/SITA_WMS";
 
 // Para obtener el object id de un código postal
-const URL_SERVICIO_CP =
-  URL_CORS_PREFIX +
-  "https://idearagondes.aragon.es/SimpleSearchService/typedSearchService";
-//const URL_SERVICIO_CP =
-//  URL_CORS_PREFIX +
-//  "https://idearagon.aragon.es/SimpleSearchService/typedSearchService"; // PRO
+var URL_SERVICIO_CP = "https://idearagon.aragon.es/SimpleSearchService/typedSearchService";
 
 // Para obtener las features dentro de un código postal (object id)
-const URL_SERVICIO_BUSQUEDA_ESPACIAL =
-  URL_CORS_PREFIX + "https://idearagondes.aragon.es/SpatialSearchService/services";
-//const URL_SERVICIO_BUSQUEDA_ESPACIAL =
-//  URL_CORS_PREFIX +
-//  "https://idearagon.aragon.es/SpatialSearchService/services"; // PRO
+var URL_SERVICIO_BUSQUEDA_ESPACIAL = "https://idearagon.aragon.es/SpatialSearchService/services";
 
-const URL_SERVICIO_ALQUILERES =
-  URL_CORS_PREFIX + "https://idearagondes.aragon.es/Visor2D";
-//const URL_SERVICIO_ALQUILERES =
-//    URL_CORS_PREFIX + "https://idearagon.aragon.es/Visor2D"; // PRO
+var URL_SERVICIO_ALQUILERES ="https://idearagon.aragon.es/Visor2D";
 
 // Configuración de la fuente de imágenes de fondo
 const MAPA_WMS_URL =
   "https://idearagon.aragon.es/arcgis/services/AragonReferencia/Basico_NEW/MapServer/WMSServer";
 const MAPA_WMS_LAYERS = "0,2,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19";
 const MAPA_WMS_VERSION = "1.1.1";
+
+if (APP_USE_DEV_SERVERS) {
+  URL_SERVICIO_ALQUILERES = "https://idearagondes.aragon.es/Visor2D";
+  URL_SERVICIO_BUSQUEDA_ESPACIAL = "https://idearagondes.aragon.es/SpatialSearchService/services";
+  URL_SITA = "https://idearagondes.aragon.es/SITA_WMS";
+  URL_SERVICIO_CP = "https://idearagondes.aragon.es/SimpleSearchService/typedSearchService";
+}
 
 // Tiempo que esperar antes de dar por perdida una petición
 const DEFAULT_REQUEST_TIMEOUT = 10000;
