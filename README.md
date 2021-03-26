@@ -24,6 +24,15 @@ Es una web estática sin mayor complicación.
 
 ## Pendiente
 
+Mejoras:
+
+- Añadir comparación con datos de otros años
+- Búsqueda por nombre de calle
+- Poder cerrar el popup
+- Navegar por el mapa, sin necesidad de introducir cp o calle, y al hacer clic, que se vean los datos de la zona.
+
+Otras tareas:
+
 - PWA
 - Separar JS y CSS a archivos propios
 - Importar librerías con un gestor de dependencias (Tailwind, OpenLayers)
