@@ -512,6 +512,8 @@ function buscar() {
 // TODO documentar
 let onFeatureSelectFuncion = (evt) => {
   let feature = evt.element;
+  console.log(feature)
+  console.log(feature.get("valores"))
   let info = {
     via_loc: feature.get("via_loc"),
     anyo: 0,
@@ -656,6 +658,10 @@ let onFeatureSelectFuncion = (evt) => {
   <p class="pt-3 text-sm text-gray-600">No hay datos recientes</p>`;
   }
 
+  contenidoPopup += `
+
+  `
+
   content.innerHTML = contenidoPopup;
   overlay.setPosition(coordinate);
 };
@@ -689,3 +695,51 @@ window.onresize = function () {
   }, 200);
 };
 map.updateSize();
+
+let exampleData = [{"anyo":2003,"tipo":1,"min":6.0,"max":6.0,"media":6.00,"num":1},{"anyo":2004,"tipo":2,"min":90.0,"max":90.0,"media":90.00,"num":1},{"anyo":2004,"tipo":1,"min":6.0,"max":355.5,"media":180.75,"num":2},{"anyo":2006,"tipo":2,"min":339.0,"max":800.0,"media":569.50,"num":2},{"anyo":2009,"tipo":2,"min":350.0,"max":350.0,"media":350.00,"num":1},{"anyo":2011,"tipo":2,"min":1100.0,"max":1100.0,"media":1100.00,"num":1},{"anyo":2014,"tipo":2,"min":500.0,"max":500.0,"media":500.00,"num":1},{"anyo":2017,"tipo":2,"min":1500.0,"max":1500.0,"media":1500.00,"num":1}]; 
+
+// Valores para type:
+// 1  vivienda
+// 2  local
+// (TODO confirmar!)
+function getDataByType(array, type) {
+  var filtered = []
+  array.forEach(function(data) {
+    if(data['tipo'] === type) {
+      filtered.push(data)
+    }
+  }) 
+  return filtered
+}
+
+var exampleDataViviendas = exampleData.filter(data => data.tipo == 2);
+var exampleDataLocales = exampleData.filter(data => data.tipo == 1);
+
+console.log(exampleData.map(data => data.media))
+
+let chart = new frappe.Chart( "#chart-test", { // or DOM element
+	data: {
+	labels: exampleDataViviendas.map(data => data.anyo),
+
+	datasets: [
+		{
+			name: "Viviendas", chartType: 'bar',
+			values: [ 6, 90, 180.75, 569.5, 350, 1100, 500, 1500 ]
+		},
+		{
+			name: "Locales", chartType: 'bar',
+			values: [ 6, 90, 180.75, 569.5, 350, 1100, 500, 1500 ]
+		},
+  ],
+	},
+
+	title: "Evolución de los precios",
+	type: 'axis-mixed', // or 'bar', 'line', 'pie', 'percentage'
+	height: 300,
+	colors: ['#3B82F6', '#10B981'],
+
+	tooltipOptions: {
+		formatTooltipX: d => (d + '').toUpperCase(),
+		formatTooltipY: d => d + ' €',
+	}
+  });
