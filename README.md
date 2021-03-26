@@ -26,10 +26,18 @@ Es una web estática sin mayor complicación.
 
 Mejoras:
 
-- Añadir comparación con datos de otros años
-- Búsqueda por nombre de calle
-- Poder cerrar el popup
-- Navegar por el mapa, sin necesidad de introducir cp o calle, y al hacer clic, que se vean los datos de la zona.
+- Añadir comparación con datos de otros años (1,5d)
+- Búsqueda por nombre de calle (2-3d)
+- Poder cerrar el popup (0,25d)
+- Navegar por el mapa, sin necesidad de introducir cp o calle, y al hacer clic,
+  que se vean los datos de la zona. (?d)
+
+Para la integración del nuevo portal de Aragón:
+
+- Permitir embed con iframe
+- Parámetros URL
+    - Quitar cuadro de búsqueda/footer
+    - Código postal por defecto
 
 Otras tareas:
 
