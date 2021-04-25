@@ -1,6 +1,14 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/webstorm+all
-# Edit at https://www.toptal.com/developers/gitignore?templates=webstorm+all
+# Created by https://www.toptal.com/developers/gitignore/api/webstorm+all,vscode
+# Edit at https://www.toptal.com/developers/gitignore?templates=webstorm+all,vscode
+
+### vscode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
 
 ### WebStorm+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
@@ -91,7 +99,7 @@ modules.xml
 # Sonarlint plugin
 .idea/sonarlint
 
-# End of https://www.toptal.com/developers/gitignore/api/webstorm+all
+# End of https://www.toptal.com/developers/gitignore/api/webstorm+all,vscode
 
-# Other dirs
+#
 .old/
