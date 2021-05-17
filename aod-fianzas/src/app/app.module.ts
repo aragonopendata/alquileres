@@ -6,6 +6,7 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import { HttpClientModule } from "@angular/common/http";
 import { SharedModule } from './shared/shared.module';
+import { MainModule } from './main/main.module';
 
 @NgModule({
   declarations: [
@@ -15,6 +16,7 @@ import { SharedModule } from './shared/shared.module';
     BrowserModule,
     HttpClientModule,
     SharedModule,
+    MainModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production,
       // Register the ServiceWorker as soon as the app is stable

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from "rxjs/operators";
 import { environment } from 'src/environments/environment';
+import { SpatialSearchResults } from '../models/spatial-search-results.model';
 
 @Injectable({
   providedIn: 'root'
@@ -40,14 +41,14 @@ export class IgearService {
    * @param typename 
    * @returns 
    */
-  spatialSearchService(objectId: string, typename: string): Observable<any> {
+  spatialSearchService(objectId: string, typename: string): Observable<SpatialSearchResults> {
     const body = new HttpParams()
       .set('SERVICE', 'DV')
       .set('TYPENAME', typename)
       .set('CQL_FILTER', `OBJECTID=${objectId}`)
       .set('PROPERTYNAME', 'OBJECTID')
       .set('TYPENAME_CONN', 'DV');
-    return this.http.post<any>(environment.urlSpatialSearchService, body)
+    return this.http.post<SpatialSearchResults>(environment.urlSpatialSearchService, body)
   }
 
   /**

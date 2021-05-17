@@ -14,6 +14,8 @@ import { ObjectId } from '../models/object-id.model';
 import { Observable } from 'rxjs';
 import { Coordinate } from 'ol/coordinate';
 import { map, switchMap } from 'rxjs/operators';
+import Style from 'ol/style/Style';
+import Stroke from 'ol/style/Stroke';
 
 @Injectable({
   providedIn: 'root'
@@ -72,12 +74,12 @@ export class MapService {
   addLayer(olMap: Map, ObjectId: string, typename: string, capa: string, distancia: number): void {
     this.igearService.spatialSearchService(ObjectId, typename)
       .pipe(switchMap(response => {
-        let cqlFilter = typename === environment.typenameDIRECCION ? `ObjectId=${ObjectId} OR ` : '';
+        let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
         for (let resultado of response.resultados) {
           if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
             for (let feature of resultado.featureCollection.features) {
-              const oid = feature.properties.ObjectId;
-              cqlFilter += cqlFilter !== '' ? ` OR ObjectId=${oid}` : `ObjectId=${oid}`;
+              const oid = feature.properties.objectid;
+              cqlFilter += cqlFilter !== '' ? ` OR objectid=${oid}` : `objectid=${oid}`;
             }
             break;
           }
@@ -87,11 +89,17 @@ export class MapService {
       .subscribe(response => {
         const extent = boundingExtent(this.getBBox(response.features));
         const geojsonFormat = new GeoJSON();
-        const features = geojsonFormat.readFeature(JSON.stringify(response));
+        const features = geojsonFormat.readFeatures(JSON.stringify(response));
         const vectorLayer = new VectorLayer({
           source: new VectorSource({
             format: geojsonFormat,
-            features: [features]
+            features: features,
+          }),
+          style: new Style({
+            stroke: new Stroke({
+              color: 'blue',
+              width: 1
+            })
           })
         });
         olMap.addLayer(vectorLayer);
@@ -121,12 +129,12 @@ export class MapService {
       type = environment.typedSearchLOCALIDAD;
     }
     return this.igearService.typedSearchService(texto, type, muni)
-    .pipe(map((res:XMLDocument) => {
-      const ObjectId: ObjectId = {
-        objectId: res.getElementsByTagName('List')[0].textContent?.split('#')[3]
-      }
-      return ObjectId;
-    }));
+      .pipe(map((res:XMLDocument) => {
+        const ObjectId: ObjectId = {
+          objectId: res.getElementsByTagName('List')[0].textContent?.split('#')[3]
+        }
+        return ObjectId;
+      }));
   }
 
   /**
@@ -157,19 +165,6 @@ export class MapService {
   /**
    * 
    * @ngdoc method
-   * @name MapService.getSearchResultCount
-   * @description
-   * @param {XMLDocument=} searchResult 
-   * @returns {Number=}
-   */
-  getSearchResultCount(searchResult: XMLDocument): Number {
-    const count: number = Number(searchResult.getElementsByTagName('Count')[0].textContent);
-    return count;
-  }
-
-  /**
-   * 
-   * @ngdoc method
    * @name MapService.getBBox
    * @description
    * @param {any=} features 
@@ -178,16 +173,24 @@ export class MapService {
   getBBox(features: any): Coordinate[] {
     let bbox = [[Infinity, Infinity], [-Infinity, -Infinity]];
     for (let feature of features) {
-      if (feature.geometry.type == "Polygon") {
-        for (let row of feature.geometry.coordinates) {
-          for (let coordinate of row) {
-            bbox[0][0] = coordinate[0] < bbox[0][0] ? coordinate[0] | 0 : bbox[0][0];
-            bbox[1][0] = coordinate[0] > bbox[1][0] ? coordinate[0] | 0 : bbox[1][0];
-            bbox[0][1] = coordinate[1] < bbox[0][1] ? coordinate[1] | 0 : bbox[0][1];
-            bbox[1][1] = coordinate[1] > bbox[1][1] ? coordinate[1] | 0 : bbox[1][1];
-          }
+      // if (feature.geometry.type == "Polygon" || feature.geometry.type == "MultiLineString") {
+      //   for (let row of feature.geometry.coordinates) {
+      //     for (let coordinate of row) {
+      //       bbox[0][0] = coordinate[0] < bbox[0][0] ? coordinate[0] | 0 : bbox[0][0];
+      //       bbox[1][0] = coordinate[0] > bbox[1][0] ? coordinate[0] | 0 : bbox[1][0];
+      //       bbox[0][1] = coordinate[1] < bbox[0][1] ? coordinate[1] | 0 : bbox[0][1];
+      //       bbox[1][1] = coordinate[1] > bbox[1][1] ? coordinate[1] | 0 : bbox[1][1];
+      //     }
+      //   }
+      // }
+      if (feature.geometry.type == 'LineString') {
+        for (let coordinate of feature.geometry.coordinates) {
+          bbox[0][0] = coordinate[0] < bbox[0][0] ? coordinate[0] | 0 : bbox[0][0];
+          bbox[1][0] = coordinate[0] > bbox[1][0] ? coordinate[0] | 0 : bbox[1][0];
+          bbox[0][1] = coordinate[1] < bbox[0][1] ? coordinate[1] | 0 : bbox[0][1];
+          bbox[1][1] = coordinate[1] > bbox[1][1] ? coordinate[1] | 0 : bbox[1][1];
         }
-      }
+    }
     }
     return bbox;
   }
