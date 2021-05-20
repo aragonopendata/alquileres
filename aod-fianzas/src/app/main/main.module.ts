@@ -4,6 +4,7 @@ import { LayoutComponent } from '../main/layout/layout.component';
 import { HeaderComponent } from '../main/header/header.component';
 import { FooterComponent } from '../main/footer/footer.component';
 import { MapComponent } from '../main/map/map.component';
+import { PopupComponent } from './popup/popup.component';
 
 
 
@@ -12,7 +13,8 @@ import { MapComponent } from '../main/map/map.component';
     LayoutComponent,
     HeaderComponent,
     FooterComponent,
-    MapComponent
+    MapComponent,
+    PopupComponent
   ],
   imports: [
     CommonModule

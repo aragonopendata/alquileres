@@ -69,4 +69,16 @@ export class IgearService {
     return this.http.post<any>(environment.urlSitaWMS, body);
   }
 
+  visor2Dservice(typename: string, cqlFilter: string): Observable<any> {
+    const body = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.0.0')
+      .set('request', 'GetFeature')
+      .set('typename', typename)
+      .set('outputFormat', 'application/json')
+      .set('srsname', environment.epsgCode)
+      .set('CQL_FILTER', cqlFilter);
+    return this.http.post<any>(environment.urlVisor2D, body);
+  }
+
 }

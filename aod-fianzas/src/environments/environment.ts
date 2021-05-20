@@ -18,7 +18,7 @@ export const environment = {
   typedSearchLOCALIDAD: 'Localidad',
   typenameCP: 'carto.v111_codigo_postal',
   typenameDIRECCION: 'carto.t111_troidesvisor',
-  typenameLOCALIDAD: '',
+  typenameLOCALIDAD: 'carto.t112_nucleos',
 };
 
 /*

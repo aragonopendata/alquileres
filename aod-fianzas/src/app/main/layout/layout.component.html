@@ -1,5 +1,6 @@
 <div class="flex flex-col min-h-screen">
-    <app-header></app-header>
-    <app-map></app-map>
+    <app-header (searchEvent)="updateMap($event)"></app-header>
+    <app-map [searchString]="searchString" (featureSelectEvent)="updatePopup($event)"></app-map>
     <app-footer></app-footer>
 </div>
+<app-popup [featureSelect]="featureSelect" *ngIf="featureSelect"></app-popup>
