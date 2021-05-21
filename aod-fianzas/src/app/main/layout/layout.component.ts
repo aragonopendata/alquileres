@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { FeatureSelect } from 'src/app/shared/models/feature-select.model';
 
 @Component({
   selector: 'app-layout',
@@ -8,19 +7,19 @@ import { FeatureSelect } from 'src/app/shared/models/feature-select.model';
 })
 export class LayoutComponent implements OnInit {
   searchString: string = '';
-  featureSelect: FeatureSelect|undefined;
+  searchStatus: string = '';
 
   constructor() { }
 
   ngOnInit(): void {
   }
 
-  updateMap(searchString: string) {
+  updateMap(searchString: string): void {
     this.searchString = searchString;
   }
 
-  updatePopup(featureSelect: FeatureSelect) {
-    this.featureSelect = featureSelect;
+  onUpdateSearchStatus(searchStatus: string) {
+    this.searchStatus = searchStatus;
   }
 
 }

@@ -1,7 +1,7 @@
-<div id="map" class="absolute w-full h-full overflow-hidden opacity-10"></div>
-<!-- Capa por encima del mapa antes de buscar -->
+<div id="map" class="absolute w-full h-full overflow-hidden" [class.opacity-10]="!isDone"></div>
+
 <div id="map-overlay" class="p-4 absolute w-full h-full
-overflow-hidden">
+overflow-hidden" *ngIf="searchString===''">
     <div class="flex justify-center lg:justify-between">
         <div class="align-center"></div>
         <div class="flex flex-col items-center">
@@ -12,9 +12,10 @@ overflow-hidden">
             </svg>
             <div class="p-4 lg:mr-auto border-2 rounded-md bg-white max-w-xs shadow">
                 <h2 class="font-semibold pb-2">¿Dónde quieres empezar?</h2>
-                <p>Escribe un código postal aragonés para ver los precios de los
-                    alquileres en la zona.</p>
+                <p>Escribe un CP, una dirección completa o una localidad aragonesa para ver los precios de los alquileres en la zona.</p>
             </div>
         </div>
     </div>
 </div>
+
+<app-popup [featureSelect]="featureSelect" [isHide]="isPopupHide"></app-popup>

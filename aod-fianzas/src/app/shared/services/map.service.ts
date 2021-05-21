@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Map, View } from 'ol';
+import { Map, Overlay, View } from 'ol';
 import { TileWMS } from 'ol/source';
 import VectorSource from 'ol/source/Vector';
 import { boundingExtent } from 'ol/extent';
@@ -16,7 +16,6 @@ import { Coordinate } from 'ol/coordinate';
 import { map, mergeMap, switchMap } from 'rxjs/operators';
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
-import { FeatureSelect } from '../models/feature-select.model';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +32,7 @@ export class MapService {
    * @param {string=} target 
    * @returns {Map=}
    */
-   initMap(target: string): Map {
+  initMap(target: string, overlay: Overlay): Map {
     const extent = boundingExtent(environment.aragonBoundingBox);
     const projection = new Projection({
       code: environment.epsgCode,
@@ -55,6 +54,7 @@ export class MapService {
     const olMap = new Map({
       target: target,
       view: new View(options),
+      overlays: [overlay],
     });
     olMap.addLayer(layer);
     olMap.getView().fit(extent);
@@ -71,9 +71,10 @@ export class MapService {
    * @param {string=} typename 
    * @param {string=} capa 
    * @param {number=} distancia 
+   * @returns {Observable<Map>=}
    */
-  addLayer(olMap: Map, ObjectId: string, typename: string, capa: string, distancia: number): void {
-    this.igearService.spatialSearchService(ObjectId, typename)
+  addLayer(olMap: Map, ObjectId: string, typename: string, capa: string, distancia: number): Observable<Map> {
+    return this.igearService.spatialSearchService(ObjectId, typename)
       .pipe(switchMap(response => {
         let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
         for (let resultado of response.resultados) {
@@ -86,8 +87,7 @@ export class MapService {
           }
         }
         return this.igearService.sitaWMSGetFeature(capa, cqlFilter);
-      }))
-      .subscribe(response => {
+      }), map(response => {
         const extent = boundingExtent(this.getBBox(response.features));
         const geojsonFormat = new GeoJSON();
         const features = geojsonFormat.readFeatures(JSON.stringify(response));
@@ -101,30 +101,12 @@ export class MapService {
               color: 'blue',
               width: 3
             })
-          })
+          }),
         });
         olMap.addLayer(vectorLayer);
-        olMap.on('click', (evt) => {
-          let pixel = olMap.getEventPixel(evt.originalEvent);
-          olMap.forEachFeatureAtPixel(pixel, (feature, resolution) => {
-            this.onFeatureSelectFuncion(evt, feature);
-          })
-        })
         olMap.getView().fit(extent);
-      });
-  }
-
-  addListener(olMap: Map, callback: (featureSelect: FeatureSelect) => void) {
-    olMap.on('click', (evt) => {
-      let pixel = olMap.getEventPixel(evt.originalEvent);
-      olMap.forEachFeatureAtPixel(pixel, (feature, resolution) => {
-        const featureSelect = {
-          evt: evt,
-          feature: feature
-        }
-        callback(featureSelect);
-      })
-    })
+        return olMap;
+      }));
   }
 
   /**
@@ -153,13 +135,16 @@ export class MapService {
 
   /**
    * 
-   * @param texto 
-   * @param type 
-   * @returns 
+   * @ngdoc method
+   * @name MapService.getObjectIdByCP
+   * @description
+   * @param {string=} texto 
+   * @param {string=} type 
+   * @returns {Observable<ObjectId>=}
    */
   getObjectIdByCP(texto: string, type: string): Observable<ObjectId> {
     return this.igearService.typedSearchService(texto, type)
-      .pipe(map((res:XMLDocument) => {
+      .pipe(map((res: XMLDocument) => {
         const objectId: ObjectId = {
           objectId: res.getElementsByTagName('List')[0].textContent?.split('#')[3],
           typename: environment.typenameCP
@@ -170,37 +155,43 @@ export class MapService {
 
   /**
    * 
-   * @param texto 
-   * @param type 
-   * @param muni 
+   * @ngdoc method
+   * @name MapService.getObjectIdByDireccion
+   * @description
+   * @param {string=} texto 
+   * @param {string=} type 
+   * @param {string=} muni 
    * @returns 
    */
   getObjectIdByDireccion(texto: string, type: string, muni: string): Observable<ObjectId> {
     return this.igearService.typedSearchService(texto, type, muni)
-      .pipe(mergeMap((res:XMLDocument) => {
-          const c_mun_via = res.getElementsByTagName('List')[0].textContent?.split('#')[3];
-          const cqlFilter = `c_mun_via='${c_mun_via}'`;
-          return this.igearService.visor2Dservice(type, cqlFilter)
+      .pipe(mergeMap((res: XMLDocument) => {
+        const c_mun_via = res.getElementsByTagName('List')[0].textContent?.split('#')[3];
+        const cqlFilter = `c_mun_via='${c_mun_via}'`;
+        return this.igearService.visor2Dservice(type, cqlFilter)
       }),
-      map((res: any) => {
-        const objectId: ObjectId = {
-          objectId: res.features[0].properties.objectid,
-          typename: environment.typenameDIRECCION
-        }
-        return objectId;
-      }));
+        map((res: any) => {
+          const objectId: ObjectId = {
+            objectId: res.features[0].properties.objectid,
+            typename: environment.typenameDIRECCION
+          }
+          return objectId;
+        }));
   }
 
   /**
    * 
-   * @param texto 
-   * @param type 
-   * @param muni 
-   * @returns 
+   * @ngdoc method
+   * @name MapService.getObjectIdByLocalidad
+   * @description
+   * @param {string=} texto 
+   * @param {string=} type 
+   * @param {string=} muni 
+   * @returns {Observable<ObjectId>=}
    */
   getObjectIdByLocalidad(texto: string, type: string): Observable<ObjectId> {
     return this.igearService.typedSearchService(texto, type)
-      .pipe(map((res:XMLDocument) => {
+      .pipe(map((res: XMLDocument) => {
         const objectId: ObjectId = {
           objectId: res.getElementsByTagName('List')[0].textContent?.split('#')[3],
           typename: environment.typenameLOCALIDAD
@@ -252,40 +243,9 @@ export class MapService {
           bbox[0][1] = coordinate[1] < bbox[0][1] ? coordinate[1] | 0 : bbox[0][1];
           bbox[1][1] = coordinate[1] > bbox[1][1] ? coordinate[1] | 0 : bbox[1][1];
         }
-    }
+      }
     }
     return bbox;
-  }
-
-  /**
-   * 
-   * @param feature 
-   */
-  onFeatureSelectFuncion(evt: any, feature: any) {
-    let info = {
-        via_loc: feature.get('via_loc'),
-        anyo: 0,
-        vivienda_min: 0,
-        vivienda_max: 0,
-        vivienda_media: 0,
-        local_min: 0,
-        local_max: 0,
-        local_media: 0
-    };
-    for (let valor of JSON.parse(feature.get('valores'))) {
-        if (valor.anyo >= info.anyo && valor.tipo === 1) {
-            info.anyo = valor.anyo;
-            info.vivienda_min = valor.min;
-            info.vivienda_max = valor.max;
-            info.vivienda_media = valor.media;
-        } else if (valor.anyo >= info.anyo && valor.tipo === 2) {
-            info.anyo = valor.anyo;
-            info.local_min = valor.min;
-            info.local_max = valor.max;
-            info.local_media = valor.media;
-        }
-    }
-    console.log(info);
   }
 
 }
