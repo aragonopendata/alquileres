@@ -67,6 +67,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnChanges {
             this.isDone = true;
             this.searchStatusEvent.emit('FIN');
           })
+        } else {
+          this.searchStatusEvent.emit('ERROR');
         }
       });
     }

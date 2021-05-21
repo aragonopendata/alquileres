@@ -212,12 +212,12 @@ export class MapService {
     let tipoBusqueda: TipoBusqueda = TipoBusqueda.SIN_DEFINIR;
     if (/^(?:0?[1-9]|[1-4]\d|5[0-2])\d{3}$/.test(searchString)) {
       tipoBusqueda = TipoBusqueda.CP;
-    } else if (/^[^\d]+\s\d+,[^\d]+?$/.test(searchString)) {
+    } else if (/^[\w\s]+,[^\d]+?$/.test(searchString)) {
       const fields = searchString.split(',')
       if (fields.length == 2 && fields[1].trim().length > 0) {
         tipoBusqueda = TipoBusqueda.CALLE;
       }
-    } else if (/^[^\d]+$/.test(searchString)) {
+    } else if (/^[^\d,]+$/.test(searchString)) {
       if (searchString.trim().length > 0) {
         tipoBusqueda = TipoBusqueda.LOCALIDAD;
       }
