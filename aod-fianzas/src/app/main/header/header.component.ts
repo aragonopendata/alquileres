@@ -10,7 +10,9 @@ export class HeaderComponent implements OnInit, OnChanges {
   @Output() searchEvent = new EventEmitter<string>();
   isSearching: boolean = true;
   isDone: boolean = false;
+  isError: boolean = false;
   searchText!: string;
+  errorStatus!: string;
 
   constructor() { }
 
@@ -23,6 +25,11 @@ export class HeaderComponent implements OnInit, OnChanges {
     } else if (chages.searchStatus.currentValue === 'FIN') {
       this.searchStatus = '';
       this.isDone = true;
+    } else if (chages.searchStatus.currentValue === 'ERROR') {
+      this.searchStatus = '';
+      this.errorStatus = 'No se han encontrado resultados. Por favor, revise su consulta'
+      this.isSearching = true;
+      this.isError = true;
     } else {
       this.isSearching = false;
     }
@@ -30,6 +37,7 @@ export class HeaderComponent implements OnInit, OnChanges {
 
   onSearch(searchString: string): void {
     this.searchText = searchString;
+    this.isError = false;
     this.searchEvent.emit(searchString);
   }
 
