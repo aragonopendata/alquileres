@@ -11,7 +11,7 @@ import { environment } from 'src/environments/environment';
 import { IgearService } from './igear.service';
 import { TipoBusqueda } from '../models/tipo-busqueda.enum';
 import { ObjectId } from '../models/object-id.model';
-import { EMPTY, Observable } from 'rxjs';
+import { EMPTY, Observable, of } from 'rxjs';
 import { Coordinate } from 'ol/coordinate';
 import { map, mergeMap, switchMap } from 'rxjs/operators';
 import Style from 'ol/style/Style';
@@ -122,7 +122,10 @@ export class MapService {
     const tipoBusqueda = this.getTipoBusqueda(searchString);
     const texto: string = fields[0];
     const muni: string = fields[1];
-    let service: Observable<ObjectId> = EMPTY;
+    let service: Observable<ObjectId> = of({
+      objectId: undefined,
+      typename: ''
+    } as ObjectId);
     if (tipoBusqueda === TipoBusqueda.CP) {
       service = this.getObjectIdByCP(texto, environment.typedSearchCP);
     } else if (tipoBusqueda === TipoBusqueda.CALLE) {
