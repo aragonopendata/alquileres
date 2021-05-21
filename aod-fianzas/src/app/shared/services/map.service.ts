@@ -171,9 +171,12 @@ export class MapService {
         return this.igearService.visor2Dservice(type, cqlFilter)
       }),
         map((res: any) => {
-          const objectId: ObjectId = {
-            objectId: res.features[0].properties.objectid,
+          let objectId = {
+            objectId: undefined,
             typename: environment.typenameDIRECCION
+          };
+          if (res.totalFeatures > 0) {
+            objectId.objectId = res.features[0].properties.objectid;
           }
           return objectId;
         }));
