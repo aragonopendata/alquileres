@@ -14,10 +14,13 @@ export class IgearService {
 
   /**
    * 
-   * @param texto 
-   * @param type 
-   * @param muni 
-   * @returns 
+   * @ngdoc method
+   * @name IgearService.typedSearchService
+   * @description Llama al servicio typed search service del IGEAR
+   * @param texto {string=}
+   * @param type {string=}
+   * @param muni {string=}
+   * @returns {Observable<XMLDocument>=}
    */
    typedSearchService(texto: string, type: string, muni?: string): Observable<XMLDocument> {
     let params = new HttpParams()
@@ -37,9 +40,12 @@ export class IgearService {
 
   /**
    * 
-   * @param objectId 
-   * @param typename 
-   * @returns 
+   * @ngdoc method
+   * @name IgearService.spatialSearchService
+   * @description Llama al servicio spatial search service del IGEAR
+   * @param objectId {string=}
+   * @param typename {string=}
+   * @returns {Observable<SpatialSearchResults>=}
    */
   spatialSearchService(objectId: string, typename: string): Observable<SpatialSearchResults> {
     const body = new HttpParams()
@@ -53,9 +59,12 @@ export class IgearService {
 
   /**
    * 
-   * @param capa 
-   * @param cqlFilter 
-   * @returns 
+   * @ngdoc method
+   * @name IgearService.sitaWMSGetFeature
+   * @description Llama al servicio SITA WMS del IGEAR
+   * @param capa {string=}
+   * @param cqlFilter {string=}
+   * @returns {Observable<any>=}
    */
   sitaWMSGetFeature(capa: string, cqlFilter: string): Observable<any> {
     const body = new HttpParams()
@@ -69,6 +78,15 @@ export class IgearService {
     return this.http.post<any>(environment.urlSitaWMS, body);
   }
 
+  /**
+   * 
+   * @ngdoc method
+   * @name IgearService.visor2Dservice
+   * @description Llama al servicio visor2D del IGEAR
+   * @param typename {string=}
+   * @param cqlFilter {string=}
+   * @returns {Observable<any>=}
+   */
   visor2Dservice(typename: string, cqlFilter: string): Observable<any> {
     const body = new HttpParams()
       .set('service', 'WFS')

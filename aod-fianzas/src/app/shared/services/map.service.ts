@@ -11,7 +11,7 @@ import { environment } from 'src/environments/environment';
 import { IgearService } from './igear.service';
 import { TipoBusqueda } from '../models/tipo-busqueda.enum';
 import { ObjectId } from '../models/object-id.model';
-import { EMPTY, Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Coordinate } from 'ol/coordinate';
 import { map, mergeMap, switchMap } from 'rxjs/operators';
 import Style from 'ol/style/Style';
@@ -28,7 +28,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.initMap
-   * @description
+   * @description Inicia el mapa de Aragón
    * @param {string=} target 
    * @returns {Map=}
    */
@@ -65,7 +65,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.addLayer
-   * @description
+   * @description Agrega una nueva capa al mapa a partir del ObjectId
    * @param {Map=} olMap 
    * @param {string=} ObjectId 
    * @param {string=} typename 
@@ -88,6 +88,7 @@ export class MapService {
         }
         return this.igearService.sitaWMSGetFeature(capa, cqlFilter);
       }), map(response => {
+        const className = `${capa}-layer`;
         const extent = boundingExtent(this.getBBox(response.features));
         const geojsonFormat = new GeoJSON();
         const features = geojsonFormat.readFeatures(JSON.stringify(response));
@@ -102,7 +103,10 @@ export class MapService {
               width: 3
             })
           }),
+          className: className
         });
+        olMap.getLayers().getArray().filter(layer => layer.getClassName() === className)
+          .forEach(layer => olMap.removeLayer(layer));
         olMap.addLayer(vectorLayer);
         olMap.getView().fit(extent);
         return olMap;
@@ -113,7 +117,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.getObjectId
-   * @description
+   * @description Obtiene el ObjectId a partir del texto de busqueda
    * @param {string=} searchString 
    * @returns {Observable<ObjectId>=}
    */
@@ -140,7 +144,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.getObjectIdByCP
-   * @description
+   * @description Obtiene el ObjectId para un CP
    * @param {string=} texto 
    * @param {string=} type 
    * @returns {Observable<ObjectId>=}
@@ -160,7 +164,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.getObjectIdByDireccion
-   * @description
+   * @description Obtiene el ObjectId para una dirección
    * @param {string=} texto 
    * @param {string=} type 
    * @param {string=} muni 
@@ -189,7 +193,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.getObjectIdByLocalidad
-   * @description
+   * @description Obtiene el ObjectId para una localidad
    * @param {string=} texto 
    * @param {string=} type 
    * @param {string=} muni 
@@ -210,7 +214,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.getTipoBusqueda
-   * @description
+   * @description Obtiene el tipo de búsqueda a partir del texto de busqueda
    * @param {string=} searchString 
    * @returns {TipoBusqueda=}
    */
@@ -235,7 +239,7 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.getBBox
-   * @description
+   * @description Obtiene el boundingbox a partir de la geometría de la búsqueda
    * @param {any=} features 
    * @returns {Coordinate=}
    */
