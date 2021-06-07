@@ -14,8 +14,8 @@ import { ObjectId } from '../models/object-id.model';
 import { Observable, of } from 'rxjs';
 import { Coordinate } from 'ol/coordinate';
 import { map, mergeMap, switchMap } from 'rxjs/operators';
-import Style from 'ol/style/Style';
-import Stroke from 'ol/style/Stroke';
+import { Style, Stroke } from 'ol/style';
+import { WFSResponse } from '../models/wfs-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -65,52 +65,33 @@ export class MapService {
    * 
    * @ngdoc method
    * @name MapService.addLayer
-   * @description Agrega una nueva capa al mapa a partir del ObjectId
+   * @description Agrega una nueva capa al mapa a partir de la respuesta del servicio WFS
    * @param {Map=} olMap 
-   * @param {string=} ObjectId 
-   * @param {string=} typename 
    * @param {string=} capa 
-   * @param {number=} distancia 
-   * @returns {Observable<Map>=}
+   * @param {WFSResponse=} wfsResponse 
    */
-  addLayer(olMap: Map, ObjectId: string, typename: string, capa: string, distancia: number): Observable<Map> {
-    return this.igearService.spatialSearchService(ObjectId, typename)
-      .pipe(switchMap(response => {
-        let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
-        for (let resultado of response.resultados) {
-          if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
-            for (let feature of resultado.featureCollection.features) {
-              const oid = feature.properties.objectid;
-              cqlFilter += cqlFilter !== '' ? ` OR objectid=${oid}` : `objectid=${oid}`;
-            }
-            break;
-          }
-        }
-        return this.igearService.sitaWMSGetFeature(capa, cqlFilter);
-      }), map(response => {
-        const className = `${capa}-layer`;
-        const extent = boundingExtent(this.getBBox(response.features));
-        const geojsonFormat = new GeoJSON();
-        const features = geojsonFormat.readFeatures(JSON.stringify(response));
-        const vectorLayer = new VectorLayer({
-          source: new VectorSource({
-            format: geojsonFormat,
-            features: features,
-          }),
-          style: new Style({
-            stroke: new Stroke({
-              color: 'blue',
-              width: 3
-            })
-          }),
-          className: className
-        });
-        olMap.getLayers().getArray().filter(layer => layer.getClassName() === className)
-          .forEach(layer => olMap.removeLayer(layer));
-        olMap.addLayer(vectorLayer);
-        olMap.getView().fit(extent);
-        return olMap;
-      }));
+  addLayer(olMap: Map, capa: string, wfsResponse: WFSResponse) {
+    const className = `${capa}-layer`;
+    const extent = boundingExtent(this.getBBox(wfsResponse.features));
+    const geojsonFormat = new GeoJSON();
+    const features = geojsonFormat.readFeatures(JSON.stringify(wfsResponse));
+    const vectorLayer = new VectorLayer({
+      source: new VectorSource({
+        format: geojsonFormat,
+        features: features,
+      }),
+      style: new Style({
+        stroke: new Stroke({
+          color: 'blue',
+          width: 3
+        })
+      }),
+      className: className
+    });
+    olMap.getLayers().getArray().filter(layer => layer.getClassName() === className)
+      .forEach(layer => olMap.removeLayer(layer));
+    olMap.addLayer(vectorLayer);
+    olMap.getView().fit(extent);
   }
 
   /**
@@ -233,6 +214,34 @@ export class MapService {
       }
     }
     return tipoBusqueda;
+  }
+
+  /**
+   * 
+   * @ngdoc method
+   * @name MapService.getWFSFeatures
+   * @description Obtiene la respuesta WFS a partir del ObjectId
+   * @param {string=} ObjectId
+   * @param {string=} typename
+   * @param {string=} capa
+   * @param {number=} distancia 
+   * @returns {Observable<WFSResponse>=}
+   */
+  getWFSFeatures(ObjectId: string, typename: string, capa: string, distancia: number): Observable<WFSResponse> {
+    return this.igearService.spatialSearchService(ObjectId, typename)
+      .pipe(switchMap(response => {
+        let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
+        for (let resultado of response.resultados) {
+          if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
+            for (let feature of resultado.featureCollection.features) {
+              const oid = feature.properties.objectid;
+              cqlFilter += cqlFilter !== '' ? ` OR objectid=${oid}` : `objectid=${oid}`;
+            }
+            break;
+          }
+        }
+        return this.igearService.sitaWMSGetFeature(capa, cqlFilter);
+      }));
   }
 
   /**

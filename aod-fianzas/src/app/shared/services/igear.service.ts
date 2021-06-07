@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from "rxjs/operators";
 import { environment } from 'src/environments/environment';
 import { SpatialSearchResults } from '../models/spatial-search-results.model';
+import { WFSResponse } from '../models/wfs-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -62,16 +63,16 @@ export class IgearService {
    * @ngdoc method
    * @name IgearService.sitaWMSGetFeature
    * @description Llama al servicio SITA WMS del IGEAR
-   * @param capa {string=}
+   * @param typename {string=}
    * @param cqlFilter {string=}
    * @returns {Observable<any>=}
    */
-  sitaWMSGetFeature(capa: string, cqlFilter: string): Observable<any> {
+  sitaWMSGetFeature(typename: string, cqlFilter: string): Observable<WFSResponse> {
     const body = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.0.0')
       .set('request', 'GetFeature')
-      .set('typename', capa)
+      .set('typename', typename)
       .set('outputFormat', 'application/json')
       .set('srsname', environment.epsgCode)
       .set('CQL_FILTER', cqlFilter);
@@ -87,7 +88,7 @@ export class IgearService {
    * @param cqlFilter {string=}
    * @returns {Observable<any>=}
    */
-  visor2Dservice(typename: string, cqlFilter: string): Observable<any> {
+  visor2Dservice(typename: string, cqlFilter: string): Observable<WFSResponse> {
     const body = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.0.0')
