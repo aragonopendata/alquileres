@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
 
 @Component({
   selector: 'app-layout',
@@ -6,20 +7,15 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./layout.component.scss']
 })
 export class LayoutComponent implements OnInit {
-  searchString: string = '';
-  searchStatus: string = '';
+  wfsResponse!: WFSResponse;
 
   constructor() { }
 
   ngOnInit(): void {
   }
 
-  updateMap(searchString: string): void {
-    this.searchString = searchString;
-  }
-
-  onUpdateSearchStatus(searchStatus: string) {
-    this.searchStatus = searchStatus;
+  updateMap(wfsResponse: WFSResponse): void {
+    this.wfsResponse = wfsResponse;
   }
 
 }

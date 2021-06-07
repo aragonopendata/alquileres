@@ -1,7 +1,7 @@
 <div id="map" class="absolute w-full h-full overflow-hidden" [class.opacity-10]="!isDone"></div>
 
 <div id="map-overlay" class="p-4 absolute w-full h-full
-overflow-hidden" *ngIf="searchString===''">
+overflow-hidden" *ngIf="!isDone">
     <div class="flex justify-center lg:justify-between">
         <div class="align-center"></div>
         <div class="flex flex-col items-center">
