@@ -1,8 +1,4 @@
 <h1 class="flex items-center gap-3 lg:gap-4">
-    <a href="https://opendata.aragon.es">
-        <img class="h-8 lg:h-10" src="./assets/img/aod-logo.png" alt="Logo de Aragón Open Data" />
-    </a>
-    <span class="pt-3 lg:pt-2 font-semibold lg:text-lg">Inmuebles de alquiler, Aragón</span>
 </h1>
 <div>
     <!-- Buscador -->
@@ -22,7 +18,7 @@
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                 </path>
             </svg>
-            <p>{{searchStatus}}</p>
+            <p>{{searchText}}</p>
         </div>
         <div class="flex items-center gap-5 pl-2 lg:pl-0" *ngIf="isDone">
             <div class="flex flex-col">
