@@ -39,11 +39,13 @@ export class HeaderComponent implements OnInit {
           this.errorStatus = 'No se han encontrado resultados. Por favor, revise su consulta';
           this.isError = true;
         }
-      }, 
+      },
       error => {
         this.errorStatus = 'Ha habido un fallo en la consulta. Por favor, intentelo de nuevo';
         this.isError = true;
       });
   }
+
+
 
 }
