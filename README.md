@@ -36,3 +36,7 @@ Para pruebas en local, el CORS no permite las conexiones. Para arreglarlo hay
 que instalar y usar una extensión de navegador.
 
 - En Firefox: [CORS Everywhere](https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/)
+
+## Compilación del proyecto
+
+- AodFianzas/README.md
