@@ -15,12 +15,14 @@ Es una web estática sin mayor complicación.
 - Se despliega la carpeta entera.
 - No hay secretos ni variables de configuración.
 
-(por ahora)
 
-### Backend
+### Servicios a los que se conecta del IGEAR
 
-> Está por ver qué servicio de búsqueda de códigos postales se acaba usando. Por
-> ahora lo dejo sin documentar.
+
+![image](https://user-images.githubusercontent.com/92776591/165341928-19d6b64b-6dff-4a03-8cf4-f52d01797da2.png)
+
+
+
 
 ## Licencia
 
