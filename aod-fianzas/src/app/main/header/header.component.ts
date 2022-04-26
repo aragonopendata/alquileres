@@ -1,6 +1,9 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { none } from 'ol/centerconstraint';
+
 import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
 import { MapService } from 'src/app/shared/services/map.service';
+
 
 @Component({
   selector: 'app-header',
@@ -36,13 +39,32 @@ export class HeaderComponent implements OnInit {
               this.searchEvent.emit(wfsResponse);
             })
         } else {
-          this.errorStatus = 'No se han encontrado resultados. Por favor, revise su consulta';
-          this.isError = true;
-        }
+          
+            let wfsResponse!: WFSResponse;
+            this.searchText = "";
+            this.isError = true;
+            this.errorStatus = "No se han encontrado resultados para la búqueda "+ searchString +".Por favor, revise su consulta";
+            this.isDone = true;
+            
+            
+          }
+         
+         
+          
+        
       },
       error => {
-        this.errorStatus = 'Ha habido un fallo en la consulta. Por favor, intentelo de nuevo';
+        let wfsResponse!: WFSResponse;
+        this.searchText = ` `;
         this.isError = true;
+        this.errorStatus = 'Ha habido un fallo en la consulta. Por favor, intentelo de nuevo';
+        this.isDone = true;
+       
+        
+       
+      
+
+       
       });
   }
 

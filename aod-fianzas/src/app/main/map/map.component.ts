@@ -41,16 +41,28 @@ export class MapComponent implements OnInit, AfterViewInit, OnChanges {
           duration: 250,
       },
     });
+ 
     this.olMap = this.mapService.initMap(this.target, this.overlay);
     this.olMap.on('click', (evt) => {
+      let featuresT:object [] = []
       let pixel = this.olMap.getEventPixel(evt.originalEvent);
       this.olMap.forEachFeatureAtPixel(pixel, (feature, resolution) => {
-        const featureSelect = {
+        
+        featuresT.push(feature);
+      })
+      
+      if (featuresT.length > 1){
+        var feature = featuresT[0];
+      
+        var featureSelect = {
           evt: evt,
           feature: feature
         }
-        this.updatePopup(featureSelect);
-      })
+        
+      this.updatePopup(featureSelect);
+      }
+         
+      
     });
   }
 
