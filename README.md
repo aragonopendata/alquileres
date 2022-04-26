@@ -40,3 +40,6 @@ que instalar y usar una extensión de navegador.
 ## Compilación del proyecto
 
 - AodFianzas/README.md
+
+## Documentación Alquileres.doc
+
