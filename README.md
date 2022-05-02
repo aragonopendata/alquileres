@@ -45,5 +45,5 @@ que instalar y usar una extensión de navegador.
 
 ## Documentación 
 
-- Alquileres.doc
+- Infraestructura _ Alquileres.md
 
