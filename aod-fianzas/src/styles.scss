@@ -2,6 +2,11 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
 img.arrow-down-white {
     display: inline;
+}
+
+input#search::placeholder {
+    color: #858B95 !important;
 }
