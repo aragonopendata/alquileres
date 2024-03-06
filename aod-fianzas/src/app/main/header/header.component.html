@@ -5,7 +5,7 @@
     <div id="div-form" class="mt-3 mb-2 pl-2 flex flex-col" *ngIf="isSearching">
         <label class="pb-1" id="search-label" for="search">Buscar por código postal, o localidad</label>
         <input autofocus class="border-4 px-4 py-2" name="search" id="search" placeholder="Buscar" type="text"
-            spellcheck="false" inputmode="numeric" #searchstring (keyup.enter)="onSearch(searchstring.value)" />
+            spellcheck="false" inputmode="text" #searchstring (keyup.enter)="onSearch(searchstring.value)" />
     </div>
     <!-- Contenedor resultados -->
     <div id="results" *ngIf="!isSearching && !isError">
