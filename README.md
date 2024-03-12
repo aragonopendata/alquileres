@@ -1,6 +1,6 @@
 # Alquileres de Aragón
 
-Aplicación web que muestra un mapa los precios medios de los alquileres de un
+Aplicación web que muestra en un mapa los precios medios de los alquileres para un
 código postal de Aragón.
 
 La fuente principal de los datos es el IGEAR y sus servicios de mapas web.
