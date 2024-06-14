@@ -11,7 +11,6 @@ WORKDIR /usr/app
 
 # Build and install components
 RUN npm install
-RUN node_modules/.bin/ng build --prod --base-href /servicios/alquileres/
 
 # Expose the port
 EXPOSE 4200
