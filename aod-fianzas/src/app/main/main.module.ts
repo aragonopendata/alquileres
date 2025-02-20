@@ -5,6 +5,7 @@ import { HeaderComponent } from '../main/header/header.component';
 import { FooterComponent } from '../main/footer/footer.component';
 import { MapComponent } from '../main/map/map.component';
 import { PopupComponent } from './popup/popup.component';
+import { ListsearchComponent } from '../main/listsearch/listsearch.component';
 
 
 
@@ -14,7 +15,8 @@ import { PopupComponent } from './popup/popup.component';
     HeaderComponent,
     FooterComponent,
     MapComponent,
-    PopupComponent
+    PopupComponent,
+    ListsearchComponent
   ],
   imports: [
     CommonModule
