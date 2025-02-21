@@ -8,6 +8,7 @@ import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
 })
 export class LayoutComponent implements OnInit {
   wfsResponse!: WFSResponse;
+  showListSearch: boolean = false;
 
   constructor() { }
 
@@ -16,6 +17,10 @@ export class LayoutComponent implements OnInit {
 
   updateMap(wfsResponse: WFSResponse): void {
     this.wfsResponse = wfsResponse;
+  }
+
+  toggleComponents(): void {
+    this.showListSearch = !this.showListSearch;
   }
 
 }

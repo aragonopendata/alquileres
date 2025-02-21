@@ -6,6 +6,7 @@ import { FooterComponent } from '../main/footer/footer.component';
 import { MapComponent } from '../main/map/map.component';
 import { PopupComponent } from './popup/popup.component';
 import { ListsearchComponent } from '../main/listsearch/listsearch.component';
+import { FianzaListComponent } from './fianza-list/fianza-list.component';
 
 
 
@@ -16,7 +17,8 @@ import { ListsearchComponent } from '../main/listsearch/listsearch.component';
     FooterComponent,
     MapComponent,
     PopupComponent,
-    ListsearchComponent
+    ListsearchComponent,
+    FianzaListComponent
   ],
   imports: [
     CommonModule
