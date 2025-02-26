@@ -1,0 +1,43 @@
+services:
+  frontend:
+    build: ./aod-fianzas/
+    container_name: aod-fianzas-front
+    volumes:
+      - ./nginx.conf:/etc/nginx/default.conf
+    ports:
+      - "4201:80"
+    networks:
+        - infraestructura_opendata
+
+  backend:
+    build: ./aod-fianzas-back/
+    container_name: aod-fianzas-back
+    networks:
+        - infraestructura_opendata
+    environment:
+      DB_URL: ${DB_URL:-postgresql://db-alquileres-dev:5432/postgres}
+      DB_TABLE: ${DB_TABLE:-v_fianzapos_2023}
+    ports:
+      - "4202:8000"
+
+  postgres:
+    image: postgres:11
+    container_name: db-alquileres-dev
+    networks:
+        - infraestructura_opendata
+    profiles:
+     - dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+#      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+        - postgres-data:/var/lib/postgresql/data
+volumes:
+    postgres-data:
+
+networks:
+  infraestructura_opendata:
+    external: true
