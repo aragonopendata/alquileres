@@ -84,18 +84,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "aod-fianzas:build"
+            "buildTarget": "aod-fianzas:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "aod-fianzas:build:production"
+              "buildTarget": "aod-fianzas:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "aod-fianzas:build"
+            "buildTarget": "aod-fianzas:build"
           }
         },
         "test": {
