@@ -23,6 +23,9 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "allowedCommonJsDependencies": [
+              "pbf"
+            ],
             "outputPath": "dist/aod-fianzas",
             "index": "src/index.html",
             "main": "src/main.ts",
