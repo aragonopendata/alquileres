@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-
+import { environment } from 'src/environments/environment'; 
 
 @Component({
   selector: 'app-fianza-list',
@@ -46,7 +46,7 @@ export class FianzaListComponent implements OnInit, OnChanges {
     console.log('Selected municipality:', this.selectedMunicipality);
     console.log('Selected street:', this.selectedStreet);
     if (this.selectedMunicipality && this.selectedStreet) {
-      const URL = `http://localhost:8000/municipality/${this.selectedMunicipality}/street/${this.selectedStreet}`;
+      const URL = `${environment.urlApi}/municipality/${this.selectedMunicipality}/street/${this.selectedStreet}`;
       this.http.get<any[]>(URL)
         .subscribe(data => {
           // loop through data and parse to a list of fianzas results

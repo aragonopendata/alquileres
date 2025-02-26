@@ -13,6 +13,7 @@ export const environment = {
   urlVisor2D: 'https://idearagondes.aragon.es/Visor2D',
   urlTypedSearchService: 'https://idearagondes.aragon.es/SimpleSearchService/typedSearchService',
   urlSpatialSearchService: 'https://idearagondes.aragon.es/SpatialSearchService/services',
+  urlApi: 'http://localhost:4202',
   typedSearchCP: 'v111_codigo_postal',
   typedSearchDIRECCION: 'TroidesV',
   typedSearchLOCALIDAD: 'Localidad',

@@ -9,6 +9,7 @@ export const environment = {
   urlVisor2D: 'https://idearagon.aragon.es/Visor2D',
   urlTypedSearchService: 'https://idearagon.aragon.es/SimpleSearchService/typedSearchService',
   urlSpatialSearchService: 'https://idearagon.aragon.es/SpatialSearchService/services',
+  urlApi: 'http://localhost:4202',
   typedSearchCP: 'v111_codigo_postal',
   typedSearchDIRECCION: 'TroidesV',
   typedSearchLOCALIDAD: 'Localidad',

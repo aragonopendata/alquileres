@@ -1,6 +1,6 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-listsearch',
@@ -23,7 +23,7 @@ export class ListsearchComponent implements OnInit {
   }
 
   fetchMunicipalities(): void {
-    const URL = "http://localhost:8000/municipality"
+    const URL = `${environment.urlApi}/municipality`
     this.http.get<any[]>(URL)
       .subscribe(data => {
         this.municipalities = data;
@@ -36,7 +36,7 @@ export class ListsearchComponent implements OnInit {
     const selectElement = event.target as HTMLSelectElement;
     const municipality = selectElement.value;    
     this.selectedMunicipality =municipality
-    const URL_STREETS = `http://localhost:8000/municipality/${municipality}/street`
+    const URL_STREETS = `${environment.urlApi}/municipality/${municipality}/street`
     this.http.get<any[]>(URL_STREETS)
       .subscribe(data => {
         this.streets = data;
