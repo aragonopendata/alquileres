@@ -6,9 +6,10 @@ import { MapService } from 'src/app/shared/services/map.service';
 
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+    selector: 'app-header',
+    templateUrl: './header.component.html',
+    styleUrls: ['./header.component.scss'],
+    standalone: false
 })
 export class HeaderComponent implements OnInit {
   @Output() searchEvent = new EventEmitter<WFSResponse>();

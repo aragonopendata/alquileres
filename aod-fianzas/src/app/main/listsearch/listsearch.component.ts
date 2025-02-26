@@ -3,9 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 @Component({
-  selector: 'app-listsearch',
-  templateUrl: './listsearch.component.html',
-  styleUrls: ['./listsearch.component.scss']
+    selector: 'app-listsearch',
+    templateUrl: './listsearch.component.html',
+    styleUrls: ['./listsearch.component.scss'],
+    standalone: false
 })
 export class ListsearchComponent implements OnInit {
 

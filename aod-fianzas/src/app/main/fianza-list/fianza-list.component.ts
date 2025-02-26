@@ -3,9 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment'; 
 
 @Component({
-  selector: 'app-fianza-list',
-  templateUrl: './fianza-list.component.html',
-  styleUrls: ['./fianza-list.component.scss']
+    selector: 'app-fianza-list',
+    templateUrl: './fianza-list.component.html',
+    styleUrls: ['./fianza-list.component.scss'],
+    standalone: false
 })
 
 export class FianzaListComponent implements OnInit, OnChanges {

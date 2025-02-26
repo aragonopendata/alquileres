@@ -6,9 +6,10 @@ import { MapService } from 'src/app/shared/services/map.service';
 import { PopupComponent } from '../popup/popup.component';
 
 @Component({
-  selector: 'app-map',
-  templateUrl: './map.component.html',
-  styleUrls: ['./map.component.scss']
+    selector: 'app-map',
+    templateUrl: './map.component.html',
+    styleUrls: ['./map.component.scss'],
+    standalone: false
 })
 export class MapComponent implements OnInit, AfterViewInit, OnChanges {
   @Input() wfsResponse!: WFSResponse;
