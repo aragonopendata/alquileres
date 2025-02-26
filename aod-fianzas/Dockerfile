@@ -1,15 +1,15 @@
-FROM node:14 AS build
+FROM node:20 AS build
 
 WORKDIR /app
 
 COPY ./package.json .
 COPY ./package-lock.json .
 
-RUN npm install -g @angular/cli@12
+RUN npm install -g @angular/cli@19
 RUN npm install
 
 COPY . /app
-RUN ng build --prod --base-href=/servicios/alquileres/
+RUN ng build --configuration production --base-href=/servicios/alquileres/
 
 
 FROM nginx:alpine
