@@ -1,17 +1,15 @@
 <div class="flex flex-col min-h-screen">
-    <div class="bg-blue-500 text-white p-4">
+    <div class="bg-blue-500 text-white p-2">
         <nav class="flex space-x-4">
-            <a routerLink="/" class="text-white hover:text-gray-300">Home</a>
-            <a routerLink="/simple" class="text-white hover:text-gray-300">Simple</a>
+            <a routerLink="" class="text-white hover:text-gray-300">Mapa</a>
+            <a routerLink="simple" class="text-white hover:text-gray-300">Simple</a>
         </nav>
     </div>
 
     <div class="flex-1 p-4">
-        <!-- <app-map-search></app-map-search> -->
-        <app-listsearch></app-listsearch>
+        <router-outlet></router-outlet>        
     </div>
 
-    <!-- <app-footer class="bg-white z-0 p-2 border-t-2 flex justify-between flex-grow-0"></app-footer> -->
     <app-footer class="bg-white p-4 border-t-2"></app-footer>
 
 </div>

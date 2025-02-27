@@ -5,15 +5,16 @@ import { Component } from '@angular/core';
 // import { HeaderComponent } from '../header/header.component';
 // import { MapComponent } from '../map/map.component';
 import { FooterComponent } from '../footer/footer.component';
-import { MapSearchComponent
-
- } from '../map-search/map-search.component';
+import { MapSearchComponent } from '../map-search/map-search.component';
 import { ListsearchComponent } from "../listsearch/listsearch.component";
+import { RouterModule
+
+ } from '@angular/router';
 @Component({
     selector: 'app-layout',
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.scss'],
-    imports: [MapSearchComponent, FooterComponent, ListsearchComponent]
+    imports: [MapSearchComponent, FooterComponent, ListsearchComponent, RouterModule]
 })
 export class LayoutComponent {
   // wfsResponse!: WFSResponse;
