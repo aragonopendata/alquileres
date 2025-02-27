@@ -8,8 +8,8 @@ describe('FianzaListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ FianzaListComponent ]
-    })
+    imports: [FianzaListComponent]
+})
     .compileComponents();
   });
 

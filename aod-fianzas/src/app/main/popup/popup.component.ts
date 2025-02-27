@@ -8,8 +8,7 @@ Chart.register(...registerables);
 @Component({
     selector: 'app-popup',
     templateUrl: './popup.component.html',
-    styleUrls: ['./popup.component.scss'],
-    standalone: false
+    styleUrls: ['./popup.component.scss']
 })
 export class PopupComponent implements OnInit, AfterViewInit, OnChanges {
   @Input() featureSelect!: FeatureSelect;

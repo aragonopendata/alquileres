@@ -8,8 +8,8 @@ describe('ListsearchComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ListsearchComponent ]
-    })
+    imports: [ListsearchComponent]
+})
     .compileComponents();
   });
 

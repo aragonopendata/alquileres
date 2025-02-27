@@ -3,13 +3,14 @@ import { none } from 'ol/centerconstraint';
 
 import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
 import { MapService } from 'src/app/shared/services/map.service';
+import { NgIf } from '@angular/common';
 
 
 @Component({
     selector: 'app-header',
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.scss'],
-    standalone: false
+    imports: [NgIf]
 })
 export class HeaderComponent implements OnInit {
   @Output() searchEvent = new EventEmitter<WFSResponse>();

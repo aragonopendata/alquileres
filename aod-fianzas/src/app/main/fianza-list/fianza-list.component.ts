@@ -1,12 +1,13 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from 'src/environments/environment'; 
+import { environment } from 'src/environments/environment';
+import { NgFor } from '@angular/common'; 
 
 @Component({
     selector: 'app-fianza-list',
     templateUrl: './fianza-list.component.html',
     styleUrls: ['./fianza-list.component.scss'],
-    standalone: false
+    imports: [NgFor]
 })
 
 export class FianzaListComponent implements OnInit, OnChanges {

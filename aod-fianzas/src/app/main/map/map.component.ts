@@ -4,12 +4,13 @@ import { FeatureSelect } from 'src/app/shared/models/feature-select.model';
 import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
 import { MapService } from 'src/app/shared/services/map.service';
 import { PopupComponent } from '../popup/popup.component';
+import { NgIf } from '@angular/common';
 
 @Component({
     selector: 'app-map',
     templateUrl: './map.component.html',
     styleUrls: ['./map.component.scss'],
-    standalone: false
+    imports: [NgIf, PopupComponent]
 })
 export class MapComponent implements OnInit, AfterViewInit, OnChanges {
   @Input() wfsResponse!: WFSResponse;

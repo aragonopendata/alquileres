@@ -1,12 +1,14 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { NgFor } from '@angular/common';
+import { FianzaListComponent } from '../fianza-list/fianza-list.component';
 
 @Component({
     selector: 'app-listsearch',
     templateUrl: './listsearch.component.html',
     styleUrls: ['./listsearch.component.scss'],
-    standalone: false
+    imports: [NgFor, FianzaListComponent]
 })
 export class ListsearchComponent implements OnInit {
 
