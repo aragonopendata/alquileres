@@ -14,8 +14,8 @@ export class ListsearchComponent implements OnInit {
 
   municipalities: any[] = [];
   streets: any[] = [];
-  selectedMunicipality: string = '';
-  selectedStreet: string = '';
+  selectedMunicipality = '';
+  selectedStreet = '';
 
   @Output() selectionChanged = new EventEmitter<{ municipality: string, street: string }>();
 

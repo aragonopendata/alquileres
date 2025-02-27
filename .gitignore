@@ -104,3 +104,5 @@ modules.xml
 #
 .old/
 .env
+
+.vscode

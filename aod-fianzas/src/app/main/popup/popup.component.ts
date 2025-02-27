@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { FeatureSelect } from 'src/app/shared/models/feature-select.model';
 import { PopupInfo } from 'src/app/shared/models/popup-info.model';
 import { Chart, registerables } from 'chart.js';
@@ -10,7 +10,7 @@ Chart.register(...registerables);
     templateUrl: './popup.component.html',
     styleUrls: ['./popup.component.scss']
 })
-export class PopupComponent implements OnInit, AfterViewInit, OnChanges {
+export class PopupComponent implements OnChanges {
   @Input() featureSelect!: FeatureSelect;
   @Input() isHide!: boolean;
   @ViewChild('chart', { read: ElementRef }) chartRef!: ElementRef;
@@ -27,14 +27,6 @@ export class PopupComponent implements OnInit, AfterViewInit, OnChanges {
   };
   chart!: Chart;
 
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
-  ngAfterViewInit(): void {
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.featureSelect.currentValue !== undefined) {
       this.updateInfo(changes.featureSelect.currentValue);
@@ -50,7 +42,7 @@ export class PopupComponent implements OnInit, AfterViewInit, OnChanges {
       maximumFractionDigits: 0,
     });
     this.popupInfo.via_loc = feature.get('via_loc');
-    for (let valor of JSON.parse(feature.get('valores'))) {
+    for (const valor of JSON.parse(feature.get('valores'))) {
       if (valor.anyo >= this.popupInfo.anyo && valor.tipo === 1) {
         this.popupInfo.anyo = valor.anyo;
         this.popupInfo.vivienda_min = valor.min;
@@ -74,13 +66,13 @@ export class PopupComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   updateChart(data: any): void {
-    let labelSet = new Set();
+    const labelSet = new Set();
     let labels: any = [];
-    let data_aux: any = {};
-    let data_vivienda: any = [];
-    let data_locales: any = [];
+    const data_aux: any = {};
+    const data_vivienda: any = [];
+    const data_locales: any = [];
 
-    for (let row of data) {
+    for (const row of data) {
       if (!data_aux[row.anyo]) {
         labelSet.add(row.anyo);
         data_aux[row.anyo] = {
@@ -96,7 +88,7 @@ export class PopupComponent implements OnInit, AfterViewInit, OnChanges {
     }
     labels = Array.from(labelSet);
 
-    for (let label of labels) {
+    for (const label of labels) {
       data_vivienda.push(data_aux[label]['vivienda']);
       data_locales.push(data_aux[label]['locales']);
     }
@@ -105,7 +97,7 @@ export class PopupComponent implements OnInit, AfterViewInit, OnChanges {
     if (this.chart !== undefined) {
       this.chart.destroy();
     }
-    let ctx = this.chartRef.nativeElement.getContext('2d');
+    const ctx = this.chartRef.nativeElement.getContext('2d');
     this.chart = new Chart(ctx, {
       type: 'line',
       data: {

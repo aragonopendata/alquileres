@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { NgFor } from '@angular/common'; 
@@ -10,20 +10,16 @@ import { NgFor } from '@angular/common';
     imports: [NgFor]
 })
 
-export class FianzaListComponent implements OnInit, OnChanges {
+export class FianzaListComponent implements OnChanges {
 
-  @Input() selectedMunicipality: string = '';
-  @Input() selectedStreet: string = '';
+  @Input() selectedMunicipality = '';
+  @Input() selectedStreet = '';
 
   fianzas: any[] = [
     // Add more fianza objects as needed
   ];
 
   constructor(private http: HttpClient) { }
-
-  ngOnInit(): void {
-  }
-
   
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.selectedMunicipality || changes.selectedStreet) {
