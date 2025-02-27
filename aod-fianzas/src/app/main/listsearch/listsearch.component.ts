@@ -1,8 +1,7 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from 'src/environments/environment';
 import { NgFor } from '@angular/common';
 import { FianzaListComponent } from '../fianza-list/fianza-list.component';
+import { AlquileresApiService } from 'src/app/shared/services/alquileres-api.service';
 
 @Component({
     selector: 'app-listsearch',
@@ -19,33 +18,32 @@ export class ListsearchComponent implements OnInit {
 
   @Output() selectionChanged = new EventEmitter<{ municipality: string, street: string }>();
 
-  constructor(private http: HttpClient) { }
+  constructor(private alquileresService: AlquileresApiService) { }
 
   ngOnInit(): void {
-    this.fetchMunicipalities();
+    this.fetchMunicipalities()
   }
 
   fetchMunicipalities(): void {
-    const URL = `${environment.urlApi}/municipality`
-    this.http.get<any[]>(URL)
-      .subscribe(data => {
-        this.municipalities = data;
-      }, error => {
-        console.error('Error fetching municipalities', error);
-      });
+    this.alquileresService.fetchMunicipalities().subscribe(data => {
+      this.municipalities = data;
+    },
+      error => {console.error('Error fetching municipalities from api. ', error)});
+  }
+
+
+  fetchStreets(municipality: string): void {
+    this.alquileresService.fetchStreets(municipality).subscribe(data => {
+      this.streets = data;
+    },
+      error => {console.error('Error fetching streets from api. ', error)});
   }
 
   onMunicipalityChange(event: Event): void {
     const selectElement = event.target as HTMLSelectElement;
-    const municipality = selectElement.value;    
+    const municipality = selectElement.value;
     this.selectedMunicipality =municipality
-    const URL_STREETS = `${environment.urlApi}/municipality/${municipality}/street`
-    this.http.get<any[]>(URL_STREETS)
-      .subscribe(data => {
-        this.streets = data;
-      }, error => {
-        console.error('Error fetching streets', error);
-      });
+    this.fetchStreets(municipality)
   }
 
   onStreetChange(event: Event): void {

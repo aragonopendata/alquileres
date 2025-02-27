@@ -66,7 +66,7 @@ export class FianzaListComponent implements OnChanges {
         }, error => {
           console.error('Error fetching fianzas', error);
         });
-      // console.log(this.fianzas)      
+          
     }
     
   }
