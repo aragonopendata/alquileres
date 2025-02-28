@@ -64,3 +64,40 @@ def query_fianzas_by_municipality_street(municipality: str, street: str):
                 fianzas.append(fianza)
             print(fianzas)
     return fianzas
+
+def query_street_id_by_street_name_and_municipality(street_name: str, municipality: str):
+    query = f"select c_mun_via from v_fianzapos_data_2023 where nombre_calle = '{street_name}' and nombre_municipio =  '{municipality}';"
+    with connect(DB_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql.SQL(query))
+            results = cur.fetchall()
+            if len(results) > 1:
+                raise Exception("More than one street_id found")
+            elif len(results) == 0:
+                return None
+            else:
+                return results[0][0]
+
+
+def query_stats_by_street_id(street_id: str):
+    query = "SELECT c_mun_via,anyo,min_renta,max_renta,media_renta,eslocal,nfianzas "\
+            "FROM v_fianzas_all "\
+            f"WHERE c_mun_via = '{street_id}' "\
+            "ORDER BY anyo DESC;"
+    with connect(DB_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql.SQL(query))
+            results = cur.fetchall()
+            stats = []
+            for result in results:
+                stat = {
+                    "c_mun_via": result[0],
+                    "anyo": result[1],
+                    "min_renta": result[2],
+                    "max_renta": result[3],
+                    "media_renta": result[4],
+                    "eslocal": result[5],
+                    "nfianzas": result[6],
+                }
+                stats.append(stat)
+            return stats
