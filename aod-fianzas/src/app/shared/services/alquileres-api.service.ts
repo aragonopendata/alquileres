@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { FianzaItem } from '../models/fianza-item.model';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +29,13 @@ export class AlquileresApiService {
   fetchResults(municipality: string, street: string): Observable<any[]> {
     const URL = `${environment.urlApi}/municipality/${municipality}/street/${street}`;
     return this.http.get<any[]>(URL).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  fetchStats(municipality: string, street: string): Observable<FianzaItem[]> {
+    const URL = `${environment.urlApi}/municipality/${municipality}/street/${street}/stats`;
+    return this.http.get<FianzaItem[]>(URL).pipe(
       catchError(this.handleError)
     );
   }

@@ -1,4 +1,4 @@
-<div class="overflow-x-auto">
+<!-- <div class="overflow-x-auto">
     <table class="min-w-full bg-white">
         <thead>
             <tr>
@@ -25,4 +25,33 @@
             </tr>
         </tbody>
     </table>
+</div> -->
+
+
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Codigo calle</th>
+                <th class="py-2 px-4 border-b">Año</th>
+                <th class="py-2 px-4 border-b">Min Renta</th>
+                <th class="py-2 px-4 border-b">Max Renta</th>
+                <th class="py-2 px-4 border-b">Media Renta</th>
+                <th class="py-2 px-4 border-b">Es Local</th>
+                <th class="py-2 px-4 border-b">Nº Fianzas</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let stat of stats">
+                <td class="py-2 px-4 border-b">{{ stat.c_mun_via }}</td>
+                <td class="py-2 px-4 border-b">{{ stat.anyo }}</td>
+                <td class="py-2 px-4 border-b">{{ stat.min_renta }}</td>
+                <td class="py-2 px-4 border-b">{{ stat.max_renta }}</td>
+                <td class="py-2 px-4 border-b">{{ stat.media_renta }}</td>
+                <td class="py-2 px-4 border-b">{{ stat.eslocal }}</td>
+                <td class="py-2 px-4 border-b">{{ stat.nfianzas }}</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
+
