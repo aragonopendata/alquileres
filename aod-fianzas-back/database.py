@@ -8,9 +8,13 @@ DB_URL = os.getenv("DB_URL", "postgresql://postgres:postgres@db-alquileres-dev/p
 DB_TABLE = os.getenv("DB_TABLE", "fianzapos_2023")
 
 def query_municipalities():
+    query = """SELECT DISTINCT f.nombre_municipio 
+                FROM fianzapos f 
+                WHERE f.clave_calle IS NOT NULL 
+                ORDER BY f.nombre_municipio ASC;"""
     with connect(DB_URL) as conn:
         with conn.cursor() as cur:
-            cur.execute(sql.SQL(f"SELECT DISTINCT nombre_municipio FROM {DB_TABLE} ORDER BY nombre_municipio ASC"))
+            cur.execute(sql.SQL(query))
             results = cur.fetchall()
             municipalities = []
             for result in results:
@@ -24,10 +28,12 @@ def query_municipalities():
 def query_streets_by_municipality(municipality: str):
     with connect(DB_URL) as conn:
         with conn.cursor() as cur:
-            cur.execute(sql.SQL(f"SELECT DISTINCT nombre_calle "
-                                f"FROM fianzapos_2023 "
-                                f"WHERE nombre_municipio = '{municipality}' "
-                                f"ORDER BY nombre_calle ASC"))
+            cur.execute(sql.SQL("SELECT DISTINCT nombre_calle "
+                                "FROM fianzapos_2023 f "
+                                f"WHERE f.nombre_municipio = '{municipality}'"
+                                " and f.clave_calle != ''"
+                                " and f.anyo >= 1996"
+                                "ORDER BY nombre_calle ASC"))
             results = cur.fetchall()
             streets = []
             for result in results:
@@ -91,13 +97,37 @@ def query_stats_by_street_id(street_id: str):
             stats = []
             for result in results:
                 stat = {
-                    "c_mun_via": result[0],
+                    # "c_mun_via": result[0],
                     "anyo": result[1],
                     "min_renta": result[2],
                     "max_renta": result[3],
                     "media_renta": result[4],
                     "eslocal": result[5],
                     "nfianzas": result[6],
+                }
+                stats.append(stat)
+            return stats
+
+def query_stats_by_street_and_municipality(street: str, municipality: str):
+    query = "SELECT anyo,min_renta,max_renta,media_renta,eslocal,nfianzas "\
+            "FROM v_fianzas_all_app_web "\
+            f"WHERE nombre_calle = '{street}' AND nombre_municipio = '{municipality}'"\
+            " and  anyo > 2007" \
+            " ORDER BY anyo DESC;"
+    # " and clave_calle != '' " \
+    with connect(DB_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql.SQL(query))
+            results = cur.fetchall()
+            stats = []
+            for result in results:
+                stat = {
+                    "anyo": result[0],
+                    "min_renta": result[1],
+                    "max_renta": result[2],
+                    "media_renta": result[3],
+                    "eslocal": result[4],
+                    "nfianzas": result[5],
                 }
                 stats.append(stat)
             return stats
