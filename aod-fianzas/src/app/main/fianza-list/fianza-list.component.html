@@ -2,8 +2,6 @@
     <table class="min-w-full bg-white">
         <thead>
             <tr>
-                <th class="py-2 px-4 border-b">Municipio</th>
-                <th class="py-2 px-4 border-b">Calle</th>
                 <th class="py-2 px-4 border-b">Tipo</th>
                 <th class="py-2 px-4 border-b">Año</th>
                 <th class="py-2 px-4 border-b">Año Devolución</th>
@@ -14,8 +12,6 @@
         </thead>
         <tbody>
             <tr *ngFor="let fianza of fianzas">
-                <td class="py-2 px-4 border-b">{{ fianza.nombre_municipio }}</td>
-                <td class="py-2 px-4 border-b">{{ fianza.nombre_calle }}</td>
                 <td class="py-2 px-4 border-b">{{ fianza.tipo }}</td>
                 <td class="py-2 px-4 border-b">{{ fianza.anyo }}</td>
                 <td class="py-2 px-4 border-b">{{ fianza.anyo_devolucion }}</td>
@@ -32,7 +28,6 @@
     <table class="min-w-full bg-white">
         <thead>
             <tr>
-                <th class="py-2 px-4 border-b">Codigo calle</th>
                 <th class="py-2 px-4 border-b">Año</th>
                 <th class="py-2 px-4 border-b">Min Renta</th>
                 <th class="py-2 px-4 border-b">Max Renta</th>
@@ -43,7 +38,6 @@
         </thead>
         <tbody>
             <tr *ngFor="let stat of stats">
-                <td class="py-2 px-4 border-b">{{ stat.c_mun_via }}</td>
                 <td class="py-2 px-4 border-b">{{ stat.anyo }}</td>
                 <td class="py-2 px-4 border-b">{{ stat.min_renta }}</td>
                 <td class="py-2 px-4 border-b">{{ stat.max_renta }}</td>
