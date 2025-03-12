@@ -29,7 +29,7 @@ def query_streets_by_municipality(municipality: str):
     with connect(DB_URL) as conn:
         with conn.cursor() as cur:
             cur.execute(sql.SQL("SELECT DISTINCT nombre_calle "
-                                "FROM fianzapos_2023 f "
+                                "FROM mv_fianzas_all_app_web f "
                                 f"WHERE f.nombre_municipio = '{municipality}'"
                                 " and f.clave_calle != ''"
                                 " and f.anyo >= 1996"
@@ -109,12 +109,13 @@ def query_stats_by_street_id(street_id: str):
             return stats
 
 def query_stats_by_street_and_municipality(street: str, municipality: str):
-    query = "SELECT anyo,min_renta,max_renta,media_renta,eslocal,nfianzas "\
-            "FROM v_fianzas_all_app_web "\
+    query = "SELECT anyo,min_renta,max_renta,media_renta,eslocal,nfianzas,clave_calle "\
+            "FROM mv_fianzas_all_app_web "\
             f"WHERE nombre_calle = '{street}' AND nombre_municipio = '{municipality}'"\
-            " and  anyo > 2007" \
+            " and clave_calle != '' " \
+            " and  anyo > 1996" \
             " ORDER BY anyo DESC;"
-    # " and clave_calle != '' " \
+
     with connect(DB_URL) as conn:
         with conn.cursor() as cur:
             cur.execute(sql.SQL(query))

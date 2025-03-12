@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { NgFor } from '@angular/common'; 
+import { NgFor } from '@angular/common';
 import { AlquileresApiService } from 'src/app/shared/services/alquileres-api.service';
 import { FianzaItem } from 'src/app/shared/models/fianza-item.model';
 
@@ -21,7 +21,7 @@ export class FianzaListComponent implements OnChanges {
   stats: FianzaItem[] = [];
 
   constructor(private http: HttpClient, private alquileresService: AlquileresApiService) { }
-  
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.selectedMunicipality || changes.selectedStreet) {
       // this.filterFianzas();
@@ -68,9 +68,8 @@ export class FianzaListComponent implements OnChanges {
         }, error => {
           console.error('Error fetching fianzas', error);
         });
-          
+
     }
-    
   }
 
   filterStats(): void {
