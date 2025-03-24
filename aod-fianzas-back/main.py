@@ -1,8 +1,15 @@
-from fastapi import FastAPI
+from venv import logger
+
+from fastapi import FastAPI, HTTPException
 from starlette.responses import RedirectResponse
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 from database import query_municipalities, query_streets_by_municipality, query_fianzas_by_municipality_street, \
-    query_stats_by_street_and_municipality
+    query_stats_by_street_and_municipality, DBException
 
 app = FastAPI()
 
@@ -29,13 +36,11 @@ def get_fianzas_by_municipality_street(municipality: str, street: str):
     fianzas = query_fianzas_by_municipality_street(municipality, street)
     return fianzas
 
-# @app.get("/municipality/{municipality}/street/{street}/stats")
-# def get_stats_by_municipality_street(municipality: str, street: str):
-#     street_id = query_street_id_by_street_name_and_municipality(street, municipality)
-#     stats = query_stats_by_street_id(street_id)
-#     return stats
-
 @app.get("/municipality/{municipality}/street/{street}/stats")
 def get_stats_by_municipality_street(municipality: str, street: str):
-    stats = query_stats_by_street_and_municipality(street, municipality)
+    try:
+        stats = query_stats_by_street_and_municipality(street, municipality)
+    except DBException as e:
+        logger.error(e.message)
+        raise HTTPException(status_code=500, detail="DB error")
     return stats
