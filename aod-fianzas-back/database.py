@@ -1,4 +1,4 @@
-from psycopg2 import connect, sql
+from psycopg2 import connect, sql, OperationalError
 import dotenv
 import os
 
