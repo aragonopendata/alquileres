@@ -28,19 +28,8 @@ export class FianzaListComponent implements OnChanges {
       this.filterStats();
     }
   }
-  //results are like   {
-  //   "anyo": 2023,
-  //   "codigo_provincia": "22",
-  //   "clave_calle": "24130",
-  //   "nombre_calle": "MAYOR",
-  //   "nombre_municipio": "ABIZANDA",
-  //   "tipo": "Vivienda",
-  //   "anyo_devolucion": "2023",
-  //   "total_rentas_str": null,
-  //   "total_importes": "180",
-  //   "total_devolucion": "",
-  //   "total_rentas": 180
-  // },
+
+
   filterFianzas(): void {
     // Implement your filtering logic here
     console.log('Selected municipality:', this.selectedMunicipality);

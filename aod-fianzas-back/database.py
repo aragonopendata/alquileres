@@ -128,7 +128,7 @@ def query_stats_by_street_and_municipality(street: str, municipality: str):
             f"WHERE nombre_calle = '{street}' AND nombre_municipio = '{municipality}'"\
             " and clave_calle != '' " \
             " and  anyo > 1996" \
-            " ORDER BY eslocal,anyo DESC;"
+            " ORDER BY anyo,eslocal DESC;"
 
     try:
         with connect(DB_URL) as conn:
