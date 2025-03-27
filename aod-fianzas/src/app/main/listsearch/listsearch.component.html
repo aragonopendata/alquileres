@@ -3,7 +3,7 @@
         <div class="flex flex-col">
             <label class="pb-1" id="search-label" for="search">Selecciona municipio</label>
             <select class="border-4 px-4 py-2" name="search" id="search" (change)="onMunicipalityChange($event)">
-                <option value=""  disabled selected>Municipio</option>
+                <option value="" disabled selected>Municipio</option>
                 <option *ngFor="let municipality of municipalities" [value]="municipality.nombre_municipio">
                     {{ municipality.nombre_municipio }}
                 </option>
@@ -11,7 +11,7 @@
         </div>
         <div class="flex flex-col">
             <label class="pb-1" id="search-label-2" for="search-2">Selecciona calle</label>
-            <select class="border-4 px-4 py-2" name="search-2" id="search-2" (change)="onStreetChange($event)">
+            <select class="border-4 px-4 py-2" name="search-2" id="search-2" [(ngModel)]="selectedStreet" (change)="onStreetChange($event)">
                 <option value="" disabled selected>Calle</option>
                 <option *ngFor="let street of streets" [value]="street.nombre_calle">
                     {{ street.nombre_calle }}
