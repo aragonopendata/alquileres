@@ -17,47 +17,19 @@ export class FianzaListComponent implements OnChanges {
   @Input() selectedMunicipality = '';
   @Input() selectedStreet = '';
 
-  fianzas: any[] = [];
   stats: FianzaItem[] = [];
 
   constructor(private http: HttpClient, private alquileresService: AlquileresApiService) { }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.selectedMunicipality || changes.selectedStreet) {
-      // this.filterFianzas();
-      this.filterStats();
+
+    if (changes.selectedMunicipality) {
+      this.stats = [];
     }
-  }
-
-
-  filterFianzas(): void {
-    // Implement your filtering logic here
-    console.log('Selected municipality:', this.selectedMunicipality);
-    console.log('Selected street:', this.selectedStreet);
-    if (this.selectedMunicipality && this.selectedStreet) {
-      const URL = `${environment.urlApi}/municipality/${this.selectedMunicipality}/street/${this.selectedStreet}`;
-      this.http.get<any[]>(URL)
-        .subscribe(data => {
-          // loop through data and parse to a list of fianzas results
-          this.fianzas = data.map(item => ({
-            anyo: item.anyo,
-            codigo_provincia: item.codigo_provincia,
-            clave_calle: item.clave_calle,
-            nombre_calle: item.nombre_calle,
-            nombre_municipio: item.nombre_municipio,
-            tipo: item.tipo,
-            anyo_devolucion: item.anyo_devolucion,
-            total_importes: item.total_importes,
-            total_devolucion: item.total_devolucion,
-            total_rentas: item.total_rentas
-
-          }));
-
-          console.log(`Data: ${this.fianzas}`)
-        }, error => {
-          console.error('Error fetching fianzas', error);
-        });
-
+    
+    if (changes.selectedMunicipality || changes.selectedStreet) {
+      // this.filterFianzas()
+      this.filterStats();
     }
   }
 
