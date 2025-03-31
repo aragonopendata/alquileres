@@ -51,7 +51,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnChanges {
         featuresT.push(feature);
       })
       
-      if (featuresT.length > 1){
+      if (featuresT.length > 0){
         var feature = featuresT[0];
       
         var featureSelect = {
