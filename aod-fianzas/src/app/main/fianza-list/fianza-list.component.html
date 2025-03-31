@@ -1,27 +1,33 @@
+<div class="container mx-auto">
+    <div class="bg-gray-200 p-4" *ngIf="stats && stats.length > 0">
+        <div class="h-64">
+            <canvas #chart></canvas>
+        </div>
+    </div>
 
-
-<div class="overflow-x-auto">
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Año</th>
-                <th class="py-2 px-4 border-b">Min Renta</th>
-                <th class="py-2 px-4 border-b">Max Renta</th>
-                <th class="py-2 px-4 border-b">Media Renta</th>
-                <th class="py-2 px-4 border-b">Tipo</th>
-                <th class="py-2 px-4 border-b">Nº Fianzas</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let stat of stats">
-                <td class="py-2 px-4 border-b">{{ stat.anyo }}</td>
-                <td class="py-2 px-4 border-b">{{ stat.min_renta }}</td>
-                <td class="py-2 px-4 border-b">{{ stat.max_renta }}</td>
-                <td class="py-2 px-4 border-b">{{ stat.media_renta }}</td>
-                <td class="py-2 px-4 border-b">{{ stat.eslocal }}</td>
-                <td class="py-2 px-4 border-b">{{ stat.nfianzas }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">Año</th>
+                    <th class="py-2 px-4 border-b">Min Renta</th>
+                    <th class="py-2 px-4 border-b">Max Renta</th>
+                    <th class="py-2 px-4 border-b">Media Renta</th>
+                    <th class="py-2 px-4 border-b">Tipo</th>
+                    <th class="py-2 px-4 border-b">Nº Fianzas</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let stat of stats">
+                    <td class="py-2 px-4 border-b">{{ stat.anyo }}</td>
+                    <td class="py-2 px-4 border-b">{{ stat.min_renta }}</td>
+                    <td class="py-2 px-4 border-b">{{ stat.max_renta }}</td>
+                    <td class="py-2 px-4 border-b">{{ stat.media_renta }}</td>
+                    <td class="py-2 px-4 border-b">{{ stat.eslocal }}</td>
+                    <td class="py-2 px-4 border-b">{{ stat.nfianzas }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 

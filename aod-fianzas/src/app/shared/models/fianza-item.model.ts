@@ -3,6 +3,6 @@ export interface FianzaItem {
     min_renta: number;
     max_renta: number;
     media_renta: number;
-    eslocal: boolean;
+    eslocal: string;
     nfianzas: number;
   }
