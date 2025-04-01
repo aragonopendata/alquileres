@@ -20,15 +20,27 @@ export class FianzaListComponent implements OnChanges, AfterViewChecked {
   @Input() selectedStreet = '';
   @ViewChild('chart', { read: ElementRef }) chartRef!: ElementRef;
 
-  stats: FianzaItem[] = [];
+  private _stats: FianzaItem[] = [];
   chart!: Chart;
   shouldUpdateChart = false;
 
   constructor(private http: HttpClient, private alquileresService: AlquileresApiService) { }
 
+  // Getter to transform snake_case to camelCase
+  get stats() {
+    return this._stats.map(item => ({
+      anyo: item.anyo,
+      minRenta: item.min_renta,
+      maxRenta: item.max_renta,
+      mediaRenta: item.media_renta,
+      eslocal: item.eslocal,
+      nfianzas: item.nfianzas
+    }));
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.selectedMunicipality) {
-      this.stats = [];
+      this._stats = [];
     }
 
     if (changes.selectedMunicipality || changes.selectedStreet) {
@@ -47,8 +59,8 @@ export class FianzaListComponent implements OnChanges, AfterViewChecked {
     if (this.selectedMunicipality && this.selectedStreet) {
       this.alquileresService.fetchStats(this.selectedMunicipality, this.selectedStreet)
         .subscribe((data: FianzaItem[]) => {
-          this.stats = data;
-          if (this.stats.length > 0) {
+          this._stats = data;
+          if (this._stats.length > 0) {
             this.shouldUpdateChart = true;
           }
         }, error => {

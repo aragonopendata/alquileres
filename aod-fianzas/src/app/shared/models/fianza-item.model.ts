@@ -5,4 +5,4 @@ export interface FianzaItem {
     media_renta: number;
     eslocal: string;
     nfianzas: number;
-  }
+}
