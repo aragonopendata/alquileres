@@ -1,0 +1,11 @@
+[project]
+name = "aod-fianzas-back"
+version = "0.1.0"
+description = "Backend for Fianzas app"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi[standard]>=0.115.8",
+    "psycopg2>=2.9.10",
+]

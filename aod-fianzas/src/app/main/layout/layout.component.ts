@@ -1,21 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
+import { Component } from '@angular/core';
+import { FooterComponent } from '../footer/footer.component';
+import { RouterModule
 
+ } from '@angular/router';
 @Component({
-  selector: 'app-layout',
-  templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss']
+    selector: 'app-layout',
+    templateUrl: './layout.component.html',
+    styleUrls: ['./layout.component.scss'],
+    imports: [FooterComponent, RouterModule]
 })
-export class LayoutComponent implements OnInit {
-  wfsResponse!: WFSResponse;
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
-  updateMap(wfsResponse: WFSResponse): void {
-    this.wfsResponse = wfsResponse;
-  }
+export class LayoutComponent {
 
 }

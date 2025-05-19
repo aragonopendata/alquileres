@@ -1,27 +1,26 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
-import { none } from 'ol/centerconstraint';
+import { Component, EventEmitter, Output } from '@angular/core';
+// import { none } from 'ol/centerconstraint';
 
 import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
 import { MapService } from 'src/app/shared/services/map.service';
+import { NgIf } from '@angular/common';
 
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+    selector: 'app-header',
+    templateUrl: './header.component.html',
+    styleUrls: ['./header.component.scss'],
+    imports: [NgIf]
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent {
   @Output() searchEvent = new EventEmitter<WFSResponse>();
-  isSearching: boolean = true;
-  isDone: boolean = false;
-  isError: boolean = false;
+  isSearching = true;
+  isDone = false;
+  isError = false;
   searchText!: string;
   errorStatus!: string;
 
   constructor(private mapService: MapService) { }
-
-  ngOnInit(): void {
-  }
 
   onSearch(searchString: string): void {
     this.searchText = `Localizando ${searchString}...`;
@@ -40,32 +39,22 @@ export class HeaderComponent implements OnInit {
             })
         } else {
           
-            let wfsResponse!: WFSResponse;
+            // let wfsResponse!: WFSResponse;
             this.searchText = "";
             this.isError = true;
             this.errorStatus = "No se han encontrado resultados para la búqueda "+ searchString +".Por favor, revise su consulta";
-            this.isDone = true;
-            
-            
+            this.isDone = true;            
           }
-         
-         
-          
-        
-      },
-      error => {
-        let wfsResponse!: WFSResponse;
-        this.searchText = ` `;
-        this.isError = true;
-        this.errorStatus = 'Ha habido un fallo en la consulta. Por favor, intentelo de nuevo';
-        this.isDone = true;
-       
-        
-       
-      
 
-       
-      });
+      },
+      // error => {
+      //   // let wfsResponse!: WFSResponse;
+      //   this.searchText = ` `;
+      //   this.isError = true;
+      //   this.errorStatus = 'Ha habido un fallo en la consulta. Por favor, intentelo de nuevo';
+      //   this.isDone = true;
+      // }
+      );
   }
 
 

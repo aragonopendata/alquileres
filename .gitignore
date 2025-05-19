@@ -103,3 +103,7 @@ modules.xml
 
 #
 .old/
+.env
+
+.vscode
+node_modules

@@ -1,36 +1,38 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild, SimpleChanges } from '@angular/core';
 import { Map, Overlay } from 'ol';
 import { FeatureSelect } from 'src/app/shared/models/feature-select.model';
 import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
 import { MapService } from 'src/app/shared/services/map.service';
 import { PopupComponent } from '../popup/popup.component';
+import { NgIf} from '@angular/common';
 
 @Component({
-  selector: 'app-map',
-  templateUrl: './map.component.html',
-  styleUrls: ['./map.component.scss']
+    selector: 'app-map',
+    templateUrl: './map.component.html',
+    styleUrls: ['./map.component.scss'],
+    imports: [NgIf, PopupComponent]
 })
-export class MapComponent implements OnInit, AfterViewInit, OnChanges {
+export class MapComponent implements AfterViewInit {
   @Input() wfsResponse!: WFSResponse;
   @ViewChild(PopupComponent, { read: ElementRef }) popupRef!: ElementRef;
-  isDone: boolean = false;
-  isPopupHide: boolean = true;
-  target: string = 'map';
+  isDone = false;
+  isPopupHide = true;
+  target = 'map';
   olMap: Map = new Map({});
   overlay!: Overlay;
   featureSelect!: FeatureSelect;
 
   constructor(private mapService: MapService) { }
 
-  ngOnInit(): void {
-  }
-
   ngAfterViewInit(): void {
     this.initMap();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.updateMap();
+    if (changes['wfsResponse'] && !changes['wfsResponse'].firstChange) {
+      console.log('WFS Response changed:', this.wfsResponse);
+      this.updateMap();
+    }
   }
 
   initMap(): void {
@@ -41,35 +43,47 @@ export class MapComponent implements OnInit, AfterViewInit, OnChanges {
           duration: 250,
       },
     });
- 
+
     this.olMap = this.mapService.initMap(this.target, this.overlay);
     this.olMap.on('click', (evt) => {
-      let featuresT:object [] = []
-      let pixel = this.olMap.getEventPixel(evt.originalEvent);
-      this.olMap.forEachFeatureAtPixel(pixel, (feature, resolution) => {
-        
+      const featuresT:object [] = []
+      const pixel = this.olMap.getEventPixel(evt.originalEvent);
+      this.olMap.forEachFeatureAtPixel(pixel, (feature) => {
         featuresT.push(feature);
       })
-      
+
       if (featuresT.length > 0){
-        var feature = featuresT[0];
-      
-        var featureSelect = {
+        const feature = featuresT[0];
+
+        const featureSelect = {
           evt: evt,
           feature: feature
         }
-        
+
       this.updatePopup(featureSelect);
       }
-         
-      
+
+
     });
   }
 
   updateMap(): void {
-    if (this.wfsResponse !== undefined) {
+    if (!this.wfsResponse) {
+      console.error('No WFS response data received');
+      return;
+    }
+
+    if (!this.olMap) {
+      console.error('Map not initialized');
+      return;
+    }
+
+    try {
+      console.log('Updating map with WFS response:', this.wfsResponse);
       this.mapService.addLayer(this.olMap, 'fianzas', this.wfsResponse);
       this.isDone = true;
+    } catch (error) {
+      console.error('Error updating map:', error);
     }
   }
 
@@ -77,5 +91,4 @@ export class MapComponent implements OnInit, AfterViewInit, OnChanges {
     this.featureSelect = featureSelect;
     this.overlay.setPosition(featureSelect.evt.coordinate);
   }
-
 }

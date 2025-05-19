@@ -13,6 +13,7 @@ export const environment = {
   urlVisor2D: 'https://idearagondes.aragon.es/Visor2D',
   urlTypedSearchService: 'https://idearagondes.aragon.es/SimpleSearchService/typedSearchService',
   urlSpatialSearchService: 'https://idearagondes.aragon.es/SpatialSearchService/services',
+  urlApi: 'http://localhost:4202',
   typedSearchCP: 'v111_codigo_postal',
   typedSearchDIRECCION: 'TroidesV',
   typedSearchLOCALIDAD: 'Localidad',
@@ -28,4 +29,4 @@ export const environment = {
  * This import should be commented out in production mode because it will have a negative impact
  * on performance if an error is thrown.
  */
-// import 'zone.js/dist/zone-error';  // Included with Angular CLI.
+// import 'zone.js/plugins/zone-error';  // Included with Angular CLI.

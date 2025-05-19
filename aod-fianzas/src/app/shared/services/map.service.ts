@@ -106,7 +106,6 @@ export class MapService {
     const fields: string[] = searchString.toLowerCase().split(',');
     const tipoBusqueda = this.getTipoBusqueda(searchString);
     const texto: string = fields[0];
-    const muni: string = fields[1];
     let service: Observable<ObjectId> = of({
       objectId: undefined,
       typename: ''
@@ -160,7 +159,7 @@ export class MapService {
         return this.igearService.visor2Dservice(type, cqlFilter)
       }),
         map((res: any) => {
-          let objectId = {
+          const objectId = {
             objectId: undefined,
             typename: environment.typenameDIRECCION
           };
@@ -232,9 +231,9 @@ export class MapService {
     return this.igearService.spatialSearchService(ObjectId, typename)
       .pipe(switchMap(response => {
         let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
-        for (let resultado of response.resultados) {
+        for (const resultado of response.resultados) {
           if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
-            for (let feature of resultado.featureCollection.features) {
+            for (const feature of resultado.featureCollection.features) {
               const oid = feature.properties.objectid;
               cqlFilter += cqlFilter !== '' ? ` OR objectid=${oid}` : `objectid=${oid}`;
             }
@@ -254,10 +253,10 @@ export class MapService {
    * @returns {Coordinate=}
    */
   getBBox(features: any): Coordinate[] {
-    let bbox = [[Infinity, Infinity], [-Infinity, -Infinity]];
-    for (let feature of features) {
+    const bbox = [[Infinity, Infinity], [-Infinity, -Infinity]];
+    for (const feature of features) {
       if (feature.geometry.type == 'LineString') {
-        for (let coordinate of feature.geometry.coordinates) {
+        for (const coordinate of feature.geometry.coordinates) {
           bbox[0][0] = coordinate[0] < bbox[0][0] ? coordinate[0] | 0 : bbox[0][0];
           bbox[1][0] = coordinate[0] > bbox[1][0] ? coordinate[0] | 0 : bbox[1][0];
           bbox[0][1] = coordinate[1] < bbox[0][1] ? coordinate[1] | 0 : bbox[0][1];

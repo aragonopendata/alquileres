@@ -31,7 +31,7 @@ export class IgearService {
     if (muni !== undefined) {
       params = params.set('muni', muni);
     }
-    const options: Object = {
+    const options: object = {
       params: params,
       responseType: 'text'
     };
