@@ -1,4 +1,3 @@
-from venv import logger
 
 from fastapi import FastAPI, HTTPException
 from starlette.responses import RedirectResponse
@@ -8,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-from database import query_municipalities, query_streets_by_municipality, \
+from database2 import query_municipalities, query_streets_by_municipality, \
     query_stats_by_street_and_municipality, DBException
 
 app = FastAPI()
