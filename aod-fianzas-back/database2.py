@@ -4,7 +4,7 @@ import os
 
 dotenv.load_dotenv()
 
-DB_URL = os.getenv("DB_URL", "postgresql://postgres:postgres@db-alquileres-dev/postgres")
+DB_URL = os.getenv("DB_URL", "postgresql://postgres:postgres@db-alquileres/postgres")
 DB_TABLE = os.getenv("DB_TABLE", "fianzas_app")
 
 def query_municipalities():

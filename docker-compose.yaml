@@ -15,14 +15,14 @@ services:
     networks:
         - infraestructura_opendata
     environment:
-      DB_URL: ${DB_URL:-postgresql://db-alquileres-dev:5432/postgres}
+      DB_URL: ${DB_URL:-postgresql://db-alquileres:5432/postgres}
       DB_TABLE: ${DB_TABLE:-v_fianzapos_2023}
     ports:
       - "4202:8000"
 
   postgres:
     image: postgres:17
-    container_name: db-alquileres-dev
+    container_name: db-alquileres
     networks:
         - infraestructura_opendata
     environment:
