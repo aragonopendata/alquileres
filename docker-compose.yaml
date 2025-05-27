@@ -21,12 +21,10 @@ services:
       - "4202:8000"
 
   postgres:
-    image: postgres:11
+    image: postgres:17
     container_name: db-alquileres-dev
     networks:
         - infraestructura_opendata
-    profiles:
-     - dev
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
