@@ -3,7 +3,7 @@
 <div>
     <!-- Buscador -->
     <div id="div-form" class="mt-3 mb-2 pl-2 flex flex-col" *ngIf="isSearching">
-        <label class="pb-1" id="search-label" for="search">Buscar por código postal, o localidad</label>
+        <label class="pb-1" id="search-label" for="search">Buscar por localidad o código postal</label>
         <input autofocus class="border-4 px-4 py-2" name="search" id="search" placeholder="Buscar" type="text"
             spellcheck="false" inputmode="text" #searchstring (keyup.enter)="onSearch(searchstring.value)" />
     </div>
@@ -22,7 +22,7 @@
         </div>
         <div class="flex items-center gap-5 pl-2 lg:pl-0" *ngIf="isDone">
             <div class="flex flex-col">
-                <span class="text-gray-700 tracking-tight">Busqueda</span>
+                <span class="text-gray-700 tracking-tight">Búsqueda</span>
                 <span class="font-bold text-3xl font-tabular-lining">{{searchText}}</span>
             </div>
             <div>
