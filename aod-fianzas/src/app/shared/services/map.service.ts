@@ -25,11 +25,11 @@ export class MapService {
   constructor(private igearService: IgearService) { }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.initMap
    * @description Inicia el mapa de Aragón
-   * @param {string=} target 
+   * @param {string=} target
    * @returns {Map=}
    */
   initMap(target: string, overlay: Overlay): Map {
@@ -62,44 +62,55 @@ export class MapService {
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.addLayer
    * @description Agrega una nueva capa al mapa a partir de la respuesta del servicio WFS
-   * @param {Map=} olMap 
-   * @param {string=} capa 
-   * @param {WFSResponse=} wfsResponse 
+   * @param {Map=} olMap
+   * @param {string=} capa
+   * @param {WFSResponse=} wfsResponse
    */
   addLayer(olMap: Map, capa: string, wfsResponse: WFSResponse) {
     const className = `${capa}-layer`;
     const extent = boundingExtent(this.getBBox(wfsResponse.features));
+
     const geojsonFormat = new GeoJSON();
-    const features = geojsonFormat.readFeatures(JSON.stringify(wfsResponse));
-    const vectorLayer = new VectorLayer({
-      source: new VectorSource({
-        format: geojsonFormat,
-        features: features,
-      }),
-      style: new Style({
-        stroke: new Stroke({
-          color: 'blue',
-          width: 3
-        })
-      }),
-      className: className
-    });
-    olMap.getLayers().getArray().filter(layer => layer.getClassName() === className)
-      .forEach(layer => olMap.removeLayer(layer));
-    olMap.addLayer(vectorLayer);
-    olMap.getView().fit(extent);
+
+    try {
+      const features = geojsonFormat.readFeatures(JSON.stringify(wfsResponse));
+
+      const vectorLayer = new VectorLayer({
+        source: new VectorSource({
+          format: geojsonFormat,
+          features: features,
+        }),
+        style: new Style({
+          stroke: new Stroke({
+            color: 'blue',
+            width: 3
+          })
+        }),
+        className: className
+      });
+
+      olMap.getLayers().getArray().filter(layer => layer.getClassName() === className)
+        .forEach(layer => olMap.removeLayer(layer));
+
+      olMap.addLayer(vectorLayer);
+
+      olMap.getView().fit(extent);
+
+    } catch (error) {
+      console.error("Error processing features:", error);
+    }
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.getObjectId
    * @description Obtiene el ObjectId a partir del texto de busqueda
-   * @param {string=} searchString 
+   * @param {string=} searchString
    * @returns {Observable<ObjectId>=}
    */
   getObjectId(searchString: string): Observable<ObjectId> {
@@ -122,12 +133,12 @@ export class MapService {
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.getObjectIdByCP
    * @description Obtiene el ObjectId para un CP
-   * @param {string=} texto 
-   * @param {string=} type 
+   * @param {string=} texto
+   * @param {string=} type
    * @returns {Observable<ObjectId>=}
    */
   getObjectIdByCP(texto: string, type: string): Observable<ObjectId> {
@@ -142,14 +153,14 @@ export class MapService {
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.getObjectIdByDireccion
    * @description Obtiene el ObjectId para una dirección
-   * @param {string=} texto 
-   * @param {string=} type 
-   * @param {string=} muni 
-   * @returns 
+   * @param {string=} texto
+   * @param {string=} type
+   * @param {string=} muni
+   * @returns
    */
   getObjectIdByDireccion(texto: string, type: string, muni: string): Observable<ObjectId> {
     return this.igearService.typedSearchService(texto, type, muni)
@@ -171,20 +182,41 @@ export class MapService {
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.getObjectIdByLocalidad
    * @description Obtiene el ObjectId para una localidad
-   * @param {string=} texto 
-   * @param {string=} type 
-   * @param {string=} muni 
+   * @param {string=} texto
+   * @param {string=} type
+   * @param {string=} muni
    * @returns {Observable<ObjectId>=}
    */
   getObjectIdByLocalidad(texto: string, type: string): Observable<ObjectId> {
     return this.igearService.typedSearchService(texto, type)
       .pipe(map((res: XMLDocument) => {
+        const listElements = res.getElementsByTagName('List');
+
+        if (listElements.length === 0) {
+          return {
+            objectId: undefined,
+            typename: environment.typenameLOCALIDAD
+          } as ObjectId;
+        }
+
+        const textContent = listElements[0].textContent;
+
+        if (!textContent) {
+          return {
+            objectId: undefined,
+            typename: environment.typenameLOCALIDAD
+          } as ObjectId;
+        }
+
+        const parts = textContent.split('#');
+        const extractedObjectId = parts[3];
+
         const objectId: ObjectId = {
-          objectId: res.getElementsByTagName('List')[0].textContent?.split('#')[3],
+          objectId: extractedObjectId,
           typename: environment.typenameLOCALIDAD
         }
         return objectId;
@@ -192,23 +224,28 @@ export class MapService {
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.getTipoBusqueda
    * @description Obtiene el tipo de búsqueda a partir del texto de busqueda
-   * @param {string=} searchString 
+   * @param {string=} searchString
    * @returns {TipoBusqueda=}
    */
   getTipoBusqueda(searchString: string): TipoBusqueda {
     let tipoBusqueda: TipoBusqueda = TipoBusqueda.SIN_DEFINIR;
-    if (/^(?:0?[1-9]|[1-4]\d|5[0-2])\d{3}$/.test(searchString)) {
+
+    const cpRegex = /^(?:0?[1-9]|[1-4]\d|5[0-2])\d{3}$/;
+    const calleRegex = /^[\w\s]+,[^\d]+?$/;
+    const localidadRegex = /^[^\d,]+$/;
+
+    if (cpRegex.test(searchString)) {
       tipoBusqueda = TipoBusqueda.CP;
-    } else if (/^[\w\s]+,[^\d]+?$/.test(searchString)) {
+    } else if (calleRegex.test(searchString)) {
       const fields = searchString.split(',')
       if (fields.length == 2 && fields[1].trim().length > 0) {
         tipoBusqueda = TipoBusqueda.CALLE;
       }
-    } else if (/^[^\d,]+$/.test(searchString)) {
+    } else if (localidadRegex.test(searchString)) {
       if (searchString.trim().length > 0) {
         tipoBusqueda = TipoBusqueda.LOCALIDAD;
       }
@@ -217,20 +254,21 @@ export class MapService {
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.getWFSFeatures
    * @description Obtiene la respuesta WFS a partir del ObjectId
    * @param {string=} ObjectId
    * @param {string=} typename
    * @param {string=} capa
-   * @param {number=} distancia 
+   * @param {number=} distancia
    * @returns {Observable<WFSResponse>=}
    */
   getWFSFeatures(ObjectId: string, typename: string, capa: string, distancia: number): Observable<WFSResponse> {
     return this.igearService.spatialSearchService(ObjectId, typename)
       .pipe(switchMap(response => {
         let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
+
         for (const resultado of response.resultados) {
           if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
             for (const feature of resultado.featureCollection.features) {
@@ -240,31 +278,104 @@ export class MapService {
             break;
           }
         }
+
         return this.igearService.sitaWMSGetFeature(capa, cqlFilter);
       }));
   }
 
   /**
-   * 
+   *
    * @ngdoc method
    * @name MapService.getBBox
    * @description Obtiene el boundingbox a partir de la geometría de la búsqueda
-   * @param {any=} features 
+   * @param {any=} features
    * @returns {Coordinate=}
    */
   getBBox(features: any): Coordinate[] {
-    const bbox = [[Infinity, Infinity], [-Infinity, -Infinity]];
+    // Handle empty/invalid input
+    if (!features || features.length === 0) {
+      return environment.aragonBoundingBox; // Fallback to default view
+    }
+    
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    
     for (const feature of features) {
-      if (feature.geometry.type == 'LineString') {
-        for (const coordinate of feature.geometry.coordinates) {
-          bbox[0][0] = coordinate[0] < bbox[0][0] ? coordinate[0] | 0 : bbox[0][0];
-          bbox[1][0] = coordinate[0] > bbox[1][0] ? coordinate[0] | 0 : bbox[1][0];
-          bbox[0][1] = coordinate[1] < bbox[0][1] ? coordinate[1] | 0 : bbox[0][1];
-          bbox[1][1] = coordinate[1] > bbox[1][1] ? coordinate[1] | 0 : bbox[1][1];
+      if (!feature.geometry) {
+        continue; // Skip features without geometry
+      }
+      
+      // Extract coordinates from ANY geometry type
+      const coords = this.extractCoordinatesFromGeometry(feature.geometry);
+      
+      for (const coord of coords) {
+        if (coord.length >= 2) {
+          const x = coord[0];
+          const y = coord[1];
+          
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
         }
       }
     }
-    return bbox;
+    
+    // Fallback if no valid coordinates found
+    if (minX === Infinity || minY === Infinity) {
+      return environment.aragonBoundingBox;
+    }
+    
+    return [[minX, minY], [maxX, maxY]];
   }
 
+  /**
+   * Helper method to extract coordinates from any geometry type
+   */
+  private extractCoordinatesFromGeometry(geometry: any): number[][] {
+    const coordinates: number[][] = [];
+    
+    switch (geometry.type) {
+      case 'Point':
+        coordinates.push(geometry.coordinates);
+        break;
+        
+      case 'LineString':
+        coordinates.push(...geometry.coordinates);
+        break;
+        
+      case 'Polygon':
+        for (const ring of geometry.coordinates) {
+          coordinates.push(...ring);
+        }
+        break;
+        
+      case 'MultiPoint':
+        coordinates.push(...geometry.coordinates);
+        break;
+        
+      case 'MultiLineString':
+        for (const lineString of geometry.coordinates) {
+          coordinates.push(...lineString);
+        }
+        break;
+        
+      case 'MultiPolygon':
+        for (const polygon of geometry.coordinates) {
+          for (const ring of polygon) {
+            coordinates.push(...ring);
+          }
+        }
+        break;
+        
+      case 'GeometryCollection':
+        for (const geom of geometry.geometries) {
+          coordinates.push(...this.extractCoordinatesFromGeometry(geom));
+        }
+        break;
+    }
+    
+    return coordinates;
+  }
 }
+
