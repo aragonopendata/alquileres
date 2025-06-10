@@ -296,23 +296,27 @@ export class MapService {
     if (!features || features.length === 0) {
       return environment.aragonBoundingBox; // Fallback to default view
     }
-    
-    let minX = Infinity, minY = Infinity;
-    let maxX = -Infinity, maxY = -Infinity;
-    
+
+    // Initialize with Aragon bounding box limits instead of Infinity
+    const aragonBounds = environment.aragonBoundingBox;
+    let minX = aragonBounds[1][0]; // Start with max X from Aragon
+    let maxX = aragonBounds[0][0]; // Start with min X from Aragon
+    let minY = aragonBounds[1][1]; // Start with max Y from Aragon
+    let maxY = aragonBounds[0][1]; // Start with min Y from Aragon
+
     for (const feature of features) {
       if (!feature.geometry) {
         continue; // Skip features without geometry
       }
-      
+
       // Extract coordinates from ANY geometry type
       const coords = this.extractCoordinatesFromGeometry(feature.geometry);
-      
+
       for (const coord of coords) {
         if (coord.length >= 2) {
           const x = coord[0];
           const y = coord[1];
-          
+
           minX = Math.min(minX, x);
           maxX = Math.max(maxX, x);
           minY = Math.min(minY, y);
@@ -320,61 +324,39 @@ export class MapService {
         }
       }
     }
-    
-    // Fallback if no valid coordinates found
-    if (minX === Infinity || minY === Infinity) {
+
+    // Fallback if no valid coordinates found (bounds haven't changed from initial values)
+    if (minX === aragonBounds[1][0] && maxX === aragonBounds[0][0] &&
+        minY === aragonBounds[1][1] && maxY === aragonBounds[0][1]) {
       return environment.aragonBoundingBox;
     }
-    
+
     return [[minX, minY], [maxX, maxY]];
   }
 
   /**
-   * Helper method to extract coordinates from any geometry type
+   * Helper method to extract coordinates from LineString and MultiLineString geometries only
    */
   private extractCoordinatesFromGeometry(geometry: any): number[][] {
     const coordinates: number[][] = [];
-    
+
     switch (geometry.type) {
-      case 'Point':
-        coordinates.push(geometry.coordinates);
-        break;
-        
       case 'LineString':
         coordinates.push(...geometry.coordinates);
         break;
-        
-      case 'Polygon':
-        for (const ring of geometry.coordinates) {
-          coordinates.push(...ring);
-        }
-        break;
-        
-      case 'MultiPoint':
-        coordinates.push(...geometry.coordinates);
-        break;
-        
+
       case 'MultiLineString':
         for (const lineString of geometry.coordinates) {
           coordinates.push(...lineString);
         }
         break;
-        
-      case 'MultiPolygon':
-        for (const polygon of geometry.coordinates) {
-          for (const ring of polygon) {
-            coordinates.push(...ring);
-          }
-        }
-        break;
-        
-      case 'GeometryCollection':
-        for (const geom of geometry.geometries) {
-          coordinates.push(...this.extractCoordinatesFromGeometry(geom));
-        }
+
+      // All other geometry types are ignored
+      default:
+        // Skip unsupported geometry types
         break;
     }
-    
+
     return coordinates;
   }
 }
