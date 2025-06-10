@@ -17,11 +17,22 @@ services:
     environment:
       DB_URL: ${DB_URL:-postgresql://db-alquileres:5432/postgres}
       DB_TABLE: ${DB_TABLE:-v_fianzapos_2023}
+      REDIS_HOST: ${REDIS_HOST:-aod-fianzas-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
+      IGEAR_REQUEST_TIMEOUT: ${IGEAR_REQUEST_TIMEOUT:-120}
+      IGEAR_CONNECTION_TIMEOUT: ${IGEAR_CONNECTION_TIMEOUT:-30}
+      IGEAR_READ_TIMEOUT: ${IGEAR_READ_TIMEOUT:-120}
+      IGEAR_WRITE_TIMEOUT: ${IGEAR_WRITE_TIMEOUT:-30}
     ports:
       - "4202:8000"
+    depends_on:
+      - redis
 
   postgres:
-    image: postgres:17
+    image: postgres:11
     container_name: db-alquileres
     networks:
         - infraestructura_opendata
@@ -33,8 +44,27 @@ services:
       - "5432:5432"
     volumes:
         - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: aod-fianzas-redis
+    networks:
+        - infraestructura_opendata
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 volumes:
     postgres-data:
+    redis-data:
 
 networks:
   infraestructura_opendata:

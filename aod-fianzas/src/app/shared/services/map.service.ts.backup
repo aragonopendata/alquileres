@@ -1,0 +1,462 @@
+import { Injectable } from '@angular/core';
+import { Map, Overlay, View } from 'ol';
+import { TileWMS } from 'ol/source';
+import VectorSource from 'ol/source/Vector';
+import { boundingExtent } from 'ol/extent';
+import Projection from 'ol/proj/Projection';
+import TileLayer from 'ol/layer/Tile';
+import { GeoJSON } from 'ol/format';
+import VectorLayer from 'ol/layer/Vector';
+import { environment } from 'src/environments/environment';
+import { IgearService } from './igear.service';
+import { TipoBusqueda } from '../models/tipo-busqueda.enum';
+import { ObjectId } from '../models/object-id.model';
+import { Observable, of } from 'rxjs';
+import { Coordinate } from 'ol/coordinate';
+import { map, mergeMap, switchMap } from 'rxjs/operators';
+import { Style, Stroke } from 'ol/style';
+import { WFSResponse } from '../models/wfs-response.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MapService {
+
+  constructor(private igearService: IgearService) { }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.initMap
+   * @description Inicia el mapa de Aragón
+   * @param {string=} target
+   * @returns {Map=}
+   */
+  initMap(target: string, overlay: Overlay): Map {
+    const extent = boundingExtent(environment.aragonBoundingBox);
+    const projection = new Projection({
+      code: environment.epsgCode,
+      units: 'm'
+    });
+    const options = {
+      projection: projection,
+    };
+    const layer = new TileLayer({
+      source: new TileWMS({
+        url: environment.urlWMSServer,
+        params: {
+          LAYERS: environment.wmsLayers,
+          VERSION: environment.wmsVersion
+        },
+        projection: projection
+      })
+    });
+    const olMap = new Map({
+      target: target,
+      view: new View(options),
+      overlays: [overlay],
+    });
+    olMap.addLayer(layer);
+    olMap.getView().fit(extent);
+    return olMap;
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.addLayer
+   * @description Agrega una nueva capa al mapa a partir de la respuesta del servicio WFS
+   * @param {Map=} olMap
+   * @param {string=} capa
+   * @param {WFSResponse=} wfsResponse
+   */
+  addLayer(olMap: Map, capa: string, wfsResponse: WFSResponse) {
+    const className = `${capa}-layer`;
+    console.log('🏷️  Layer className:', className);
+
+    // Debug the features
+    console.log('📋 Features to process:', wfsResponse.features);
+    console.log('📊 Number of features:', wfsResponse.features?.length || 0);
+
+    if (wfsResponse.features && wfsResponse.features.length > 0) {
+      wfsResponse.features.forEach((feature, index) => {
+        console.log(`📍 Feature ${index}:`, {
+          geometry: feature.geometry,
+          properties: feature.properties
+        });
+      });
+    }
+    const extent = boundingExtent(this.getBBox(wfsResponse.features));
+
+    const geojsonFormat = new GeoJSON();
+
+    try {
+      const features = geojsonFormat.readFeatures(JSON.stringify(wfsResponse));
+
+      const vectorLayer = new VectorLayer({
+        source: new VectorSource({
+          format: geojsonFormat,
+          features: features,
+        }),
+        style: new Style({
+          stroke: new Stroke({
+            color: 'blue',
+            width: 3
+          })
+        }),
+        className: className
+      });
+
+      console.log('🧹 Removing existing layers with className:', className);
+      olMap.getLayers().getArray().filter(layer => layer.getClassName() === className)
+        .forEach(layer => olMap.removeLayer(layer));
+
+      console.log('➕ Adding new layer to map');
+      olMap.addLayer(vectorLayer);
+
+      console.log('🎯 Fitting map view to extent:', extent);
+      olMap.getView().fit(extent);
+
+      console.log('✅ Layer added successfully');
+    } catch (error) {
+      console.error('❌ Error processing features:', error);
+      console.error('📄 Raw WFS Response that caused error:', wfsResponse);
+    }
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.getObjectId
+   * @description Obtiene el ObjectId a partir del texto de busqueda
+   * @param {string=} searchString
+   * @returns {Observable<ObjectId>=}
+   */
+  getObjectId(searchString: string): Observable<ObjectId> {
+    const fields: string[] = searchString.toLowerCase().split(',');
+    const tipoBusqueda = this.getTipoBusqueda(searchString);
+    const texto: string = fields[0];
+    let service: Observable<ObjectId> = of({
+      objectId: undefined,
+      typename: ''
+    } as ObjectId);
+    if (tipoBusqueda === TipoBusqueda.CP) {
+      service = this.getObjectIdByCP(texto, environment.typedSearchCP);
+    /*} else if (tipoBusqueda === TipoBusqueda.CALLE) {
+      service = this.getObjectIdByDireccion(texto, environment.typedSearchDIRECCION, muni);
+    */
+    } else if (tipoBusqueda === TipoBusqueda.LOCALIDAD) {
+      service = this.getObjectIdByLocalidad(texto, environment.typedSearchLOCALIDAD);
+    }
+    return service;
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.getObjectIdByCP
+   * @description Obtiene el ObjectId para un CP
+   * @param {string=} texto
+   * @param {string=} type
+   * @returns {Observable<ObjectId>=}
+   */
+  getObjectIdByCP(texto: string, type: string): Observable<ObjectId> {
+    return this.igearService.typedSearchService(texto, type)
+      .pipe(map((res: XMLDocument) => {
+        const objectId: ObjectId = {
+          objectId: res.getElementsByTagName('List')[0].textContent?.split('#')[3],
+          typename: environment.typenameCP
+        }
+        return objectId;
+      }));
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.getObjectIdByDireccion
+   * @description Obtiene el ObjectId para una dirección
+   * @param {string=} texto
+   * @param {string=} type
+   * @param {string=} muni
+   * @returns
+   */
+  getObjectIdByDireccion(texto: string, type: string, muni: string): Observable<ObjectId> {
+    return this.igearService.typedSearchService(texto, type, muni)
+      .pipe(mergeMap((res: XMLDocument) => {
+        const c_mun_via = res.getElementsByTagName('List')[0].textContent?.split('#')[3];
+        const cqlFilter = `c_mun_via='${c_mun_via}'`;
+        return this.igearService.visor2Dservice(type, cqlFilter)
+      }),
+        map((res: any) => {
+          const objectId = {
+            objectId: undefined,
+            typename: environment.typenameDIRECCION
+          };
+          if (res.totalFeatures > 0) {
+            objectId.objectId = res.features[0].properties.objectid;
+          }
+          return objectId;
+        }));
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.getObjectIdByLocalidad
+   * @description Obtiene el ObjectId para una localidad
+   * @param {string=} texto
+   * @param {string=} type
+   * @param {string=} muni
+   * @returns {Observable<ObjectId>=}
+   */
+  getObjectIdByLocalidad(texto: string, type: string): Observable<ObjectId> {
+    console.log(`🔍 MapService.getObjectIdByLocalidad - Searching for: "${texto}" with type: "${type}"`);
+
+    return this.igearService.typedSearchService(texto, type)
+      .pipe(map((res: XMLDocument) => {
+        console.log('📄 Raw XML response from typedSearchService:', res);
+
+        const listElements = res.getElementsByTagName('List');
+        console.log('📋 List elements found:', listElements.length);
+
+        if (listElements.length === 0) {
+          console.warn('⚠️  No List elements found in XML response');
+          return {
+            objectId: undefined,
+            typename: environment.typenameLOCALIDAD
+          } as ObjectId;
+        }
+
+        const textContent = listElements[0].textContent;
+        console.log('📝 List[0] textContent:', textContent);
+
+        if (!textContent) {
+          console.warn('⚠️  No textContent in List[0] element');
+          return {
+            objectId: undefined,
+            typename: environment.typenameLOCALIDAD
+          } as ObjectId;
+        }
+
+        const parts = textContent.split('#');
+        console.log('🔗 Split parts:', parts);
+
+        const extractedObjectId = parts[3];
+        console.log('🎯 Extracted ObjectId:', extractedObjectId);
+
+        const objectId: ObjectId = {
+          objectId: extractedObjectId,
+          typename: environment.typenameLOCALIDAD
+        }
+
+        console.log('✅ Final ObjectId result:', objectId);
+        return objectId;
+      }));
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.getTipoBusqueda
+   * @description Obtiene el tipo de búsqueda a partir del texto de busqueda
+   * @param {string=} searchString
+   * @returns {TipoBusqueda=}
+   */
+  getTipoBusqueda(searchString: string): TipoBusqueda {
+    console.log(`🔍 MapService.getTipoBusqueda - analyzing: "${searchString}"`);
+
+    let tipoBusqueda: TipoBusqueda = TipoBusqueda.SIN_DEFINIR;
+
+    const cpRegex = /^(?:0?[1-9]|[1-4]\d|5[0-2])\d{3}$/;
+    const calleRegex = /^[\w\s]+,[^\d]+?$/;
+    const localidadRegex = /^[^\d,]+$/;
+
+    if (cpRegex.test(searchString)) {
+      tipoBusqueda = TipoBusqueda.CP;
+      console.log('✅ Detected as CP (Postal Code)');
+    } else if (calleRegex.test(searchString)) {
+      const fields = searchString.split(',')
+      if (fields.length == 2 && fields[1].trim().length > 0) {
+        tipoBusqueda = TipoBusqueda.CALLE;
+        console.log('✅ Detected as CALLE (Street)');
+      }
+    } else if (localidadRegex.test(searchString)) {
+      if (searchString.trim().length > 0) {
+        tipoBusqueda = TipoBusqueda.LOCALIDAD;
+        console.log('✅ Detected as LOCALIDAD (Municipality)');
+      }
+    }
+
+    console.log(`🎯 Final search type: ${tipoBusqueda}`);
+    return tipoBusqueda;
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.getWFSFeatures
+   * @description Obtiene la respuesta WFS a partir del ObjectId
+   * @param {string=} ObjectId
+   * @param {string=} typename
+   * @param {string=} capa
+   * @param {number=} distancia
+   * @returns {Observable<WFSResponse>=}
+   */
+  getWFSFeatures(ObjectId: string, typename: string, capa: string, distancia: number): Observable<WFSResponse> {
+    console.log(`🗺️  MapService.getWFSFeatures called with:`, {
+      ObjectId,
+      typename,
+      capa,
+      distancia
+    });
+
+    return this.igearService.spatialSearchService(ObjectId, typename)
+      .pipe(switchMap(response => {
+        console.log('🌍 spatialSearchService response:', response);
+        console.log('📊 Total resultados:', response.resultados?.length || 0);
+
+        let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
+        console.log('🔍 Initial cqlFilter:', cqlFilter);
+
+        for (const resultado of response.resultados) {
+          console.log(`🔎 Processing resultado - capa: "${resultado.capa}", distancia: ${resultado.distancia}, looking for: "${capa}" at distance: ${distancia}`);
+
+          if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
+            console.log('✅ Found matching resultado!');
+            console.log('📋 Features in this resultado:', resultado.featureCollection.features.length);
+
+            for (const feature of resultado.featureCollection.features) {
+              const oid = feature.properties.objectid;
+              console.log('🎯 Processing feature objectid:', oid);
+              cqlFilter += cqlFilter !== '' ? ` OR objectid=${oid}` : `objectid=${oid}`;
+            }
+            break;
+          } else {
+            console.log(`❌ No match - distancia: ${resultado.distancia} !== ${distancia} OR capa: "${resultado.capa}" does not include "${capa}"`);
+          }
+        }
+
+        console.log('🔗 Final cqlFilter:', cqlFilter);
+
+        if (cqlFilter === '' || (typename !== environment.typenameCP && cqlFilter === '')) {
+          console.warn('⚠️  Empty cqlFilter - no features found to query');
+          // Return empty WFS response or handle appropriately
+        }
+
+        console.log('📡 Making sitaWMSGetFeature request with cqlFilter:', cqlFilter);
+        return this.igearService.sitaWMSGetFeature(capa, cqlFilter);
+      }));
+  }
+
+  /**
+   *
+   * @ngdoc method
+   * @name MapService.getBBox
+   * @description Obtiene el boundingbox a partir de la geometría de la búsqueda
+   * @param {any=} features
+   * @returns {Coordinate=}
+   */
+  getBBox(features: any): Coordinate[] {
+    console.log('📦 getBBox called with features:', features);
+
+    if (!features || features.length === 0) {
+      console.warn('⚠️  No features provided to getBBox');
+      // Return default Aragon bounding box
+      return environment.aragonBoundingBox;
+    }
+
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+
+    for (const feature of features) {
+      if (!feature.geometry) {
+        console.warn('⚠️  Feature has no geometry:', feature);
+        continue;
+      }
+
+      console.log(`📍 Processing geometry type: ${feature.geometry.type}`);
+
+      const coords = this.extractCoordinatesFromGeometry(feature.geometry);
+
+      for (const coord of coords) {
+        if (coord.length >= 2) {
+          const x = coord[0];
+          const y = coord[1];
+
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
+        }
+      }
+    }
+
+    // If no valid coordinates found, return default
+    if (minX === Infinity || minY === Infinity) {
+      console.warn('⚠️  No valid coordinates found, using default Aragon bounding box');
+      return environment.aragonBoundingBox;
+    }
+
+    const bbox = [[minX, minY], [maxX, maxY]];
+    console.log('📐 Calculated bbox:', bbox);
+
+    return bbox;
+  }
+
+  /**
+   * Helper method to extract coordinates from any geometry type
+   */
+  private extractCoordinatesFromGeometry(geometry: any): number[][] {
+    const coordinates: number[][] = [];
+
+    switch (geometry.type) {
+      case 'Point':
+        coordinates.push(geometry.coordinates);
+        break;
+
+      case 'LineString':
+        coordinates.push(...geometry.coordinates);
+        break;
+
+      case 'Polygon':
+        // Polygon has array of linear rings (exterior + holes)
+        for (const ring of geometry.coordinates) {
+          coordinates.push(...ring);
+        }
+        break;
+
+      case 'MultiPoint':
+        coordinates.push(...geometry.coordinates);
+        break;
+
+      case 'MultiLineString':
+        for (const lineString of geometry.coordinates) {
+          coordinates.push(...lineString);
+        }
+        break;
+
+      case 'MultiPolygon':
+        for (const polygon of geometry.coordinates) {
+          for (const ring of polygon) {
+            coordinates.push(...ring);
+          }
+        }
+        break;
+
+      case 'GeometryCollection':
+        for (const geom of geometry.geometries) {
+          coordinates.push(...this.extractCoordinatesFromGeometry(geom));
+        }
+        break;
+
+      default:
+        console.warn('⚠️  Unknown geometry type:', geometry.type);
+    }
+
+    return coordinates;
+  }
+
+}
+
+

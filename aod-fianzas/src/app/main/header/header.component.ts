@@ -2,7 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 // import { none } from 'ol/centerconstraint';
 
 import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
-import { MapService } from 'src/app/shared/services/map.service';
+import { GeographicSearchService, LocationSearchResponse } from 'src/app/shared/services/geographic-search.service';
 import { NgIf } from '@angular/common';
 
 
@@ -20,43 +20,58 @@ export class HeaderComponent {
   searchText!: string;
   errorStatus!: string;
 
-  constructor(private mapService: MapService) { }
+  constructor(private geographicSearchService: GeographicSearchService) { }
 
   onSearch(searchString: string): void {
     this.searchText = `Localizando ${searchString}...`;
     this.isError = false;
     this.isDone = false;
     this.isSearching = false;
-    this.mapService.getObjectId(searchString).subscribe(
-      objectId => {
-        if (objectId.objectId !== undefined) {
-          this.searchText = 'Cargando datos de alquileres...';
-          this.mapService.getWFSFeatures(objectId.objectId, objectId.typename, 'fianzas', 1000).subscribe(
-            wfsResponse => {
-              this.searchText = searchString;
-              this.isDone = true;
-              this.searchEvent.emit(wfsResponse);
-            })
-        } else {
+    
+    this.geographicSearchService.searchLocation(searchString).subscribe({
+      next: (response: LocationSearchResponse) => {
+        if (response.success && response.data && response.data.features.length > 0) {
+          this.searchText = searchString;
+          this.isDone = true;
           
-            // let wfsResponse!: WFSResponse;
-            this.searchText = "";
-            this.isError = true;
-            this.errorStatus = "No se han encontrado resultados para la búqueda "+ searchString +".Por favor, revise su consulta";
-            this.isDone = true;            
-          }
-
+          // Convert backend response to frontend WFSResponse format
+          const wfsResponse: WFSResponse = {
+            crs: {
+              type: response.data.crs.type,
+              properties: [response.data.crs.properties] // Convert single object to array
+            },
+            features: response.data.features.map(feature => ({
+              geometry: feature.geometry || {}, // Ensure geometry is not undefined
+              geometry_name: feature.geometry_name || '',
+              id: feature.id,
+              properties: {
+                c_mun_via: feature.properties.c_mun_via || '',
+                objectid: feature.properties.objectid || 0,
+                valores: feature.properties.valores || '',
+                via_loc: feature.properties.via_loc || ''
+              },
+              type: feature.type
+            })),
+            fotalFeatures: response.data.totalFeatures, // Note: keeping the typo from existing model
+            type: response.data.type
+          };
+          
+          this.searchEvent.emit(wfsResponse);
+        } else {
+          this.searchText = "";
+          this.isError = true;
+          this.errorStatus = response.message || `No se han encontrado resultados para la búsqueda ${searchString}. Por favor, revise su consulta.`;
+          this.isDone = true;
+        }
       },
-      // error => {
-      //   // let wfsResponse!: WFSResponse;
-      //   this.searchText = ` `;
-      //   this.isError = true;
-      //   this.errorStatus = 'Ha habido un fallo en la consulta. Por favor, intentelo de nuevo';
-      //   this.isDone = true;
-      // }
-      );
+      error: (error) => {
+        this.searchText = "";
+        this.isError = true;
+        this.errorStatus = 'Ha habido un fallo en la consulta. Por favor, inténtelo de nuevo.';
+        this.isDone = true;
+        console.error('Geographic search error:', error);
+      }
+    });
   }
-
-
 
 }

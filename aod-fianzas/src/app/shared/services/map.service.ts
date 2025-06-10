@@ -8,12 +8,7 @@ import TileLayer from 'ol/layer/Tile';
 import { GeoJSON } from 'ol/format';
 import VectorLayer from 'ol/layer/Vector';
 import { environment } from 'src/environments/environment';
-import { IgearService } from './igear.service';
-import { TipoBusqueda } from '../models/tipo-busqueda.enum';
-import { ObjectId } from '../models/object-id.model';
-import { Observable, of } from 'rxjs';
 import { Coordinate } from 'ol/coordinate';
-import { map, mergeMap, switchMap } from 'rxjs/operators';
 import { Style, Stroke } from 'ol/style';
 import { WFSResponse } from '../models/wfs-response.model';
 
@@ -22,7 +17,7 @@ import { WFSResponse } from '../models/wfs-response.model';
 })
 export class MapService {
 
-  constructor(private igearService: IgearService) { }
+  constructor() { }
 
   /**
    *
@@ -105,183 +100,9 @@ export class MapService {
     }
   }
 
-  /**
-   *
-   * @ngdoc method
-   * @name MapService.getObjectId
-   * @description Obtiene el ObjectId a partir del texto de busqueda
-   * @param {string=} searchString
-   * @returns {Observable<ObjectId>=}
-   */
-  getObjectId(searchString: string): Observable<ObjectId> {
-    const fields: string[] = searchString.toLowerCase().split(',');
-    const tipoBusqueda = this.getTipoBusqueda(searchString);
-    const texto: string = fields[0];
-    let service: Observable<ObjectId> = of({
-      objectId: undefined,
-      typename: ''
-    } as ObjectId);
-    if (tipoBusqueda === TipoBusqueda.CP) {
-      service = this.getObjectIdByCP(texto, environment.typedSearchCP);
-    /*} else if (tipoBusqueda === TipoBusqueda.CALLE) {
-      service = this.getObjectIdByDireccion(texto, environment.typedSearchDIRECCION, muni);
-    */
-    } else if (tipoBusqueda === TipoBusqueda.LOCALIDAD) {
-      service = this.getObjectIdByLocalidad(texto, environment.typedSearchLOCALIDAD);
-    }
-    return service;
-  }
 
-  /**
-   *
-   * @ngdoc method
-   * @name MapService.getObjectIdByCP
-   * @description Obtiene el ObjectId para un CP
-   * @param {string=} texto
-   * @param {string=} type
-   * @returns {Observable<ObjectId>=}
-   */
-  getObjectIdByCP(texto: string, type: string): Observable<ObjectId> {
-    return this.igearService.typedSearchService(texto, type)
-      .pipe(map((res: XMLDocument) => {
-        const objectId: ObjectId = {
-          objectId: res.getElementsByTagName('List')[0].textContent?.split('#')[3],
-          typename: environment.typenameCP
-        }
-        return objectId;
-      }));
-  }
 
-  /**
-   *
-   * @ngdoc method
-   * @name MapService.getObjectIdByDireccion
-   * @description Obtiene el ObjectId para una dirección
-   * @param {string=} texto
-   * @param {string=} type
-   * @param {string=} muni
-   * @returns
-   */
-  getObjectIdByDireccion(texto: string, type: string, muni: string): Observable<ObjectId> {
-    return this.igearService.typedSearchService(texto, type, muni)
-      .pipe(mergeMap((res: XMLDocument) => {
-        const c_mun_via = res.getElementsByTagName('List')[0].textContent?.split('#')[3];
-        const cqlFilter = `c_mun_via='${c_mun_via}'`;
-        return this.igearService.visor2Dservice(type, cqlFilter)
-      }),
-        map((res: any) => {
-          const objectId = {
-            objectId: undefined,
-            typename: environment.typenameDIRECCION
-          };
-          if (res.totalFeatures > 0) {
-            objectId.objectId = res.features[0].properties.objectid;
-          }
-          return objectId;
-        }));
-  }
 
-  /**
-   *
-   * @ngdoc method
-   * @name MapService.getObjectIdByLocalidad
-   * @description Obtiene el ObjectId para una localidad
-   * @param {string=} texto
-   * @param {string=} type
-   * @param {string=} muni
-   * @returns {Observable<ObjectId>=}
-   */
-  getObjectIdByLocalidad(texto: string, type: string): Observable<ObjectId> {
-    return this.igearService.typedSearchService(texto, type)
-      .pipe(map((res: XMLDocument) => {
-        const listElements = res.getElementsByTagName('List');
-
-        if (listElements.length === 0) {
-          return {
-            objectId: undefined,
-            typename: environment.typenameLOCALIDAD
-          } as ObjectId;
-        }
-
-        const textContent = listElements[0].textContent;
-
-        if (!textContent) {
-          return {
-            objectId: undefined,
-            typename: environment.typenameLOCALIDAD
-          } as ObjectId;
-        }
-
-        const parts = textContent.split('#');
-        const extractedObjectId = parts[3];
-
-        const objectId: ObjectId = {
-          objectId: extractedObjectId,
-          typename: environment.typenameLOCALIDAD
-        }
-        return objectId;
-      }));
-  }
-
-  /**
-   *
-   * @ngdoc method
-   * @name MapService.getTipoBusqueda
-   * @description Obtiene el tipo de búsqueda a partir del texto de busqueda
-   * @param {string=} searchString
-   * @returns {TipoBusqueda=}
-   */
-  getTipoBusqueda(searchString: string): TipoBusqueda {
-    let tipoBusqueda: TipoBusqueda = TipoBusqueda.SIN_DEFINIR;
-
-    const cpRegex = /^(?:0?[1-9]|[1-4]\d|5[0-2])\d{3}$/;
-    const calleRegex = /^[\w\s]+,[^\d]+?$/;
-    const localidadRegex = /^[^\d,]+$/;
-
-    if (cpRegex.test(searchString)) {
-      tipoBusqueda = TipoBusqueda.CP;
-    } else if (calleRegex.test(searchString)) {
-      const fields = searchString.split(',')
-      if (fields.length == 2 && fields[1].trim().length > 0) {
-        tipoBusqueda = TipoBusqueda.CALLE;
-      }
-    } else if (localidadRegex.test(searchString)) {
-      if (searchString.trim().length > 0) {
-        tipoBusqueda = TipoBusqueda.LOCALIDAD;
-      }
-    }
-    return tipoBusqueda;
-  }
-
-  /**
-   *
-   * @ngdoc method
-   * @name MapService.getWFSFeatures
-   * @description Obtiene la respuesta WFS a partir del ObjectId
-   * @param {string=} ObjectId
-   * @param {string=} typename
-   * @param {string=} capa
-   * @param {number=} distancia
-   * @returns {Observable<WFSResponse>=}
-   */
-  getWFSFeatures(ObjectId: string, typename: string, capa: string, distancia: number): Observable<WFSResponse> {
-    return this.igearService.spatialSearchService(ObjectId, typename)
-      .pipe(switchMap(response => {
-        let cqlFilter = typename === environment.typenameCP ? `objectid=${ObjectId}` : '';
-
-        for (const resultado of response.resultados) {
-          if (resultado.distancia === distancia && resultado.capa.includes(capa)) {
-            for (const feature of resultado.featureCollection.features) {
-              const oid = feature.properties.objectid;
-              cqlFilter += cqlFilter !== '' ? ` OR objectid=${oid}` : `objectid=${oid}`;
-            }
-            break;
-          }
-        }
-
-        return this.igearService.sitaWMSGetFeature(capa, cqlFilter);
-      }));
-  }
 
   /**
    *
