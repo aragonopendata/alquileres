@@ -1,9 +1,18 @@
 <div class="flex flex-col h-screen">
-    <div class="bg-blue-500 text-white p-2">
-        <nav class="flex space-x-4">
-            <a routerLink="" class="text-white hover:text-gray-300">Mapa</a>
-            <a routerLink="simple" class="text-white hover:text-gray-300">Simple</a>
-        </nav>
+    <div class="bg-white p-4 border-b border-gray-200">
+        <div class="flex justify-center items-center space-x-4">
+            <a routerLink=""
+               routerLinkActive="bg-slate-900 shadow-inner"
+               [routerLinkActiveOptions]="{exact: true}"
+               class="bg-slate-800 text-white font-semibold py-2 px-5 rounded-md hover:bg-slate-700 transition-colors duration-200">
+                Consulta mediante mapa
+            </a>
+            <a routerLink="simple"
+               routerLinkActive="bg-slate-900 shadow-inner"
+               class="bg-slate-800 text-white font-semibold py-2 px-5 rounded-md hover:bg-slate-700 transition-colors duration-200">
+                Consulta mediante calle
+            </a>
+        </div>
     </div>
 
     <div class="flex-1 p-4 overflow-y-auto">
