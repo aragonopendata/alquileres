@@ -1,17 +1,19 @@
 <div class="flex flex-col h-screen">
-    <div class="bg-white p-4 border-b border-gray-200">
-        <div class="flex justify-center items-center space-x-4">
-            <a routerLink=""
-               routerLinkActive="bg-slate-900 shadow-inner"
-               [routerLinkActiveOptions]="{exact: true}"
-               class="bg-slate-800 text-white font-semibold py-2 px-5 rounded-md hover:bg-slate-700 transition-colors duration-200">
-                Consulta mediante mapa
-            </a>
-            <a routerLink="simple"
-               routerLinkActive="bg-slate-900 shadow-inner"
-               class="bg-slate-800 text-white font-semibold py-2 px-5 rounded-md hover:bg-slate-700 transition-colors duration-200">
-                Consulta mediante calle
-            </a>
+    <div class="bg-white p-6 border-b border-gray-200">
+        <div class="flex justify-center">
+            <div class="inline-flex bg-gray-800 rounded-lg p-1 shadow-lg">
+                <a routerLink=""
+                   routerLinkActive="bg-white text-gray-800 shadow-md"
+                   [routerLinkActiveOptions]="{exact: true}"
+                   class="inline-flex items-center px-6 py-3 text-sm font-semibold text-white rounded-md hover:bg-gray-700 transition-all duration-200 min-w-[200px] justify-center">
+                    Consulta mediante mapa
+                </a>
+                <a routerLink="simple"
+                   routerLinkActive="bg-white text-gray-800 shadow-md"
+                   class="inline-flex items-center px-6 py-3 text-sm font-semibold text-white rounded-md hover:bg-gray-700 transition-all duration-200 min-w-[200px] justify-center">
+                    Consulta mediante calle
+                </a>
+            </div>
         </div>
     </div>
 
