@@ -44,92 +44,142 @@ class GeographicSearchService:
         try:
             # Detect search type if not provided
             search_type = request.search_type or self._detect_search_type(request.search_text)
-            
             logger.info(f"Searching for '{request.search_text}' with type '{search_type}'")
             
-            # Generate cache key including all search parameters
-            cache_key = cache_service.get_cache_key(
-                search_type.value.lower(), 
-                f"{request.search_text}_{request.layer}_{request.distance}"
-            )
-            
-            # Try to get cached result first
-            cached_result = cache_service.get(cache_key)
+            # Try cache first
+            cache_key = self._generate_cache_key(request, search_type)
+            cached_result = self._get_cached_result(cache_key, request.search_text)
             if cached_result:
-                logger.info(f"Cache HIT for search: {request.search_text}")
-                return LocationSearchResponse(**cached_result)
+                return cached_result
             
             # Cache miss - perform actual search
             logger.info(f"Cache MISS for search: {request.search_text}")
-            
-            # Resolve object ID based on search type
-            try:
-                object_id = self._resolve_object_id(request.search_text, search_type)
-            except (ServiceTimeoutError, ServiceUnavailableError) as service_error:
-                # Don't cache service errors during object ID resolution
-                logger.warning(f"External service error during object ID resolution for '{request.search_text}': {service_error}")
-                return LocationSearchResponse(
-                    success=False,
-                    search_text=request.search_text,
-                    search_type=search_type,
-                    message=f"Los servicios externos están temporalmente no disponibles. Por favor, inténtelo de nuevo más tarde."
-                )
-            
-            if not object_id.object_id:
-                error_response = LocationSearchResponse(
-                    success=False,
-                    search_text=request.search_text,
-                    search_type=search_type,
-                    message=f"No se han encontrado resultados para la búsqueda {request.search_text}. Por favor, revise su consulta."
-                )
-                # Cache legitimate "not found" responses for a shorter time (5 minutes)
-                if cache_service.should_cache_error(error_response.message):
-                    cache_service.set(cache_key, error_response.model_dump(), 300)
-                return error_response
-            
-            # Get WFS features for the location
-            try:
-                wfs_response = self._get_wfs_features(
-                    object_id.object_id,
-                    object_id.typename,
-                    request.layer,
-                    request.distance
-                )
-                
-                success_response = LocationSearchResponse(
-                    success=True,
-                    search_text=request.search_text,
-                    search_type=search_type,
-                    data=wfs_response,
-                    message="Búsqueda completada exitosamente"
-                )
-                
-                # Cache successful response with appropriate TTL
-                ttl = cache_service.get_ttl_for_search_type(search_type.value.lower())
-                cache_service.set(cache_key, success_response.model_dump(), ttl)
-                
-                return success_response
-                
-            except (ServiceTimeoutError, ServiceUnavailableError) as service_error:
-                # Don't cache service errors - return error response without caching
-                logger.warning(f"External service error for search '{request.search_text}': {service_error}")
-                return LocationSearchResponse(
-                    success=False,
-                    search_text=request.search_text,
-                    search_type=search_type,
-                    message=f"Los servicios externos están temporalmente no disponibles. Por favor, inténtelo de nuevo más tarde."
-                )
+            return self._perform_search(request, search_type, cache_key)
             
         except Exception as e:
             logger.error(f"Error in location search: {e}")
-            error_response = LocationSearchResponse(
-                success=False,
-                search_text=request.search_text,
-                search_type=search_type or SearchType.SIN_DEFINIR,
-                message=f"Ha habido un fallo en la consulta: {str(e)}"
+            return self._create_error_response(
+                request.search_text,
+                search_type or SearchType.SIN_DEFINIR,
+                f"Ha habido un fallo en la consulta: {str(e)}"
             )
-            # Don't cache server errors
-            return error_response
+    
+    def _generate_cache_key(self, request: LocationSearchRequest, search_type: SearchType) -> str:
+        """Generate cache key for the search request."""
+        return cache_service.get_cache_key(
+            search_type.value.lower(), 
+            f"{request.search_text}_{request.layer}_{request.distance}"
+        )
+    
+    def _get_cached_result(self, cache_key: str, search_text: str) -> Optional[LocationSearchResponse]:
+        """Try to get cached result for the search."""
+        cached_result = cache_service.get(cache_key)
+        if cached_result:
+            logger.info(f"Cache HIT for search: {search_text}")
+            return LocationSearchResponse(**cached_result)
+        return None
+    
+    def _perform_search(self, request: LocationSearchRequest, search_type: SearchType, cache_key: str) -> LocationSearchResponse:
+        """Perform the actual search operation."""
+        # Resolve object ID
+        object_id_result = self._resolve_object_id_with_error_handling(request.search_text, search_type)
+        if isinstance(object_id_result, LocationSearchResponse):
+            # Error occurred during object ID resolution
+            return object_id_result
+        
+        object_id = object_id_result
+        if not object_id.object_id:
+            return self._handle_object_id_not_found(request.search_text, search_type, cache_key)
+        
+        # Get WFS features
+        return self._get_wfs_features_with_error_handling(
+            object_id, request, search_type, cache_key
+        )
+    
+    def _resolve_object_id_with_error_handling(self, search_text: str, search_type: SearchType) -> ObjectId | LocationSearchResponse:
+        """Resolve object ID with proper error handling for service issues."""
+        try:
+            return self._resolve_object_id(search_text, search_type)
+        except (ServiceTimeoutError, ServiceUnavailableError) as service_error:
+            logger.warning(f"External service error during object ID resolution for '{search_text}': {service_error}")
+            return self._create_service_unavailable_response(search_text, search_type)
+    
+    def _handle_object_id_not_found(self, search_text: str, search_type: SearchType, cache_key: str) -> LocationSearchResponse:
+        """Handle case when object ID is not found."""
+        error_response = self._create_error_response(
+            search_text,
+            search_type,
+            f"No se han encontrado resultados para la búsqueda {search_text}. Por favor, revise su consulta."
+        )
+        
+        # Cache legitimate "not found" responses for a shorter time (5 minutes)
+        if cache_service.should_cache_error(error_response.message):
+            cache_service.set(cache_key, error_response.model_dump(), 300)
+        
+        return error_response
+    
+    def _get_wfs_features_with_error_handling(
+        self, 
+        object_id: ObjectId, 
+        request: LocationSearchRequest, 
+        search_type: SearchType, 
+        cache_key: str
+    ) -> LocationSearchResponse:
+        """Get WFS features with proper error handling."""
+        try:
+            wfs_response = self._get_wfs_features(
+                object_id.object_id,
+                object_id.typename,
+                request.layer,
+                request.distance
+            )
+            
+            return self._create_success_response_and_cache(
+                request.search_text, search_type, wfs_response, cache_key
+            )
+            
+        except (ServiceTimeoutError, ServiceUnavailableError) as service_error:
+            logger.warning(f"External service error for search '{request.search_text}': {service_error}")
+            return self._create_service_unavailable_response(request.search_text, search_type)
+    
+    def _create_success_response_and_cache(
+        self, 
+        search_text: str, 
+        search_type: SearchType, 
+        wfs_response: WFSResponse, 
+        cache_key: str
+    ) -> LocationSearchResponse:
+        """Create success response and cache it."""
+        success_response = LocationSearchResponse(
+            success=True,
+            search_text=search_text,
+            search_type=search_type,
+            data=wfs_response,
+            message="Búsqueda completada exitosamente"
+        )
+        
+        # Cache successful response with appropriate TTL
+        ttl = cache_service.get_ttl_for_search_type(search_type.value.lower())
+        cache_service.set(cache_key, success_response.model_dump(), ttl)
+        
+        return success_response
+    
+    def _create_error_response(self, search_text: str, search_type: SearchType, message: str) -> LocationSearchResponse:
+        """Create error response."""
+        return LocationSearchResponse(
+            success=False,
+            search_text=search_text,
+            search_type=search_type,
+            message=message
+        )
+    
+    def _create_service_unavailable_response(self, search_text: str, search_type: SearchType) -> LocationSearchResponse:
+        """Create service unavailable response."""
+        return self._create_error_response(
+            search_text,
+            search_type,
+            "Los servicios externos están temporalmente no disponibles. Por favor, inténtelo de nuevo más tarde."
+        )
     
     def _detect_search_type(self, search_string: str) -> SearchType:
         """
