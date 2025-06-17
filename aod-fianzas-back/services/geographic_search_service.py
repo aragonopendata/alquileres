@@ -392,7 +392,7 @@ class GeographicSearchService:
             distance: Search distance in meters
             
         Returns:
-            WFS response with features (fitered features with via_loc like '- (*)')
+            WFS response with features (filtered features with via_loc like '- (*)')
             
         Raises:
             ServiceTimeoutError: When external service calls timeout
@@ -403,33 +403,11 @@ class GeographicSearchService:
             spatial_results = self.igear_service.spatial_search_service(object_id, typename)
             
             # Build CQL filter based on spatial results
-            cql_filter = ""
-            
-            # For postal codes, include the original object ID
-            if typename == settings.typename_cp:
-                cql_filter = f"objectid={object_id}"
-            
-            # Process spatial search results to build filter
-            for resultado in spatial_results.resultados:
-                if resultado.distancia == distance and layer in resultado.capa:
-                    for feature in resultado.feature_collection.features:
-                        feature_oid = feature.properties.get('objectid')
-                        if feature_oid:
-                            if cql_filter:
-                                cql_filter += f" OR objectid={feature_oid}"
-                            else:
-                                cql_filter = f"objectid={feature_oid}"
-                    break
+            cql_filter = self._build_cql_filter(spatial_results, object_id, typename, layer, distance)
             
             if not cql_filter:
                 logger.warning(f"No CQL filter generated for object_id={object_id}, layer={layer}, distance={distance}")
-                # Return empty WFS response - this is legitimate (no features found)
-                return WFSResponse(
-                    crs={"type": "name", "properties": {"name": settings.epsg_code}},
-                    features=[],
-                    total_features=0,
-                    type="FeatureCollection"
-                )
+                return self._create_empty_wfs_response()
             
             # Get WFS features using the CQL filter
             wfs_response = self.igear_service.sita_wms_get_feature(layer, cql_filter)
@@ -446,21 +424,82 @@ class GeographicSearchService:
             logger.error(f"Service timeout getting WFS features after {settings.igear_read_timeout}s: {e}")
             raise ServiceTimeoutError(f"External service timeout after {settings.igear_read_timeout} seconds: {e}")
         except Exception as e:
-            error_msg = str(e).lower()
+            self._handle_wfs_service_exceptions(e)
+    
+    def _build_cql_filter(self, spatial_results, object_id: str, typename: str, layer: str, distance: int) -> str:
+        """
+        Build CQL filter from spatial search results.
+        
+        Args:
+            spatial_results: Results from spatial search service
+            object_id: IGEAR object identifier
+            typename: Object typename
+            layer: Map layer to search
+            distance: Search distance in meters
             
-            # Check for timeout-related errors (fallback for other timeout types)
-            if any(timeout_keyword in error_msg for timeout_keyword in ['timeout', 'timed out', 'read timeout']):
-                logger.error(f"Service timeout getting WFS features: {e}")
-                raise ServiceTimeoutError(f"External service timeout: {e}")
+        Returns:
+            CQL filter string
+        """
+        cql_filter = ""
+        
+        # For postal codes, include the original object ID
+        if typename == settings.typename_cp:
+            cql_filter = f"objectid={object_id}"
+        
+        # Process spatial search results to build filter
+        for resultado in spatial_results.resultados:
+            if resultado.distancia == distance and layer in resultado.capa:
+                for feature in resultado.feature_collection.features:
+                    feature_oid = feature.properties.get('objectid')
+                    if feature_oid:
+                        if cql_filter:
+                            cql_filter += f" OR objectid={feature_oid}"
+                        else:
+                            cql_filter = f"objectid={feature_oid}"
+                break
+        
+        return cql_filter
+    
+    def _create_empty_wfs_response(self) -> WFSResponse:
+        """
+        Create empty WFS response for cases with no results.
+        
+        Returns:
+            Empty WFS response
+        """
+        return WFSResponse(
+            crs={"type": "name", "properties": {"name": settings.epsg_code}},
+            features=[],
+            total_features=0,
+            type="FeatureCollection"
+        )
+    
+    def _handle_wfs_service_exceptions(self, e: Exception) -> None:
+        """
+        Handle service exceptions for WFS operations.
+        
+        Args:
+            e: Exception to handle
             
-            # Check for connection-related errors
-            if any(conn_keyword in error_msg for conn_keyword in ['connection', 'connect', 'network', 'unreachable']):
-                logger.error(f"Service unavailable getting WFS features: {e}")
-                raise ServiceUnavailableError(f"External service unavailable: {e}")
-            
-            # For other errors, still raise as service error
-            logger.error(f"Service error getting WFS features: {e}")
-            raise ServiceUnavailableError(f"External service error: {e}")
+        Raises:
+            ServiceTimeoutError: For timeout-related errors
+            ServiceUnavailableError: For connection and other service errors
+        """
+        error_msg = str(e).lower()
+        
+        # Check for timeout-related errors (fallback for other timeout types)
+        if any(timeout_keyword in error_msg for timeout_keyword in ['timeout', 'timed out', 'read timeout']):
+            logger.error(f"Service timeout getting WFS features: {e}")
+            raise ServiceTimeoutError(f"External service timeout: {e}")
+        
+        # Check for connection-related errors
+        if any(conn_keyword in error_msg for conn_keyword in ['connection', 'connect', 'network', 'unreachable']):
+            logger.error(f"Service unavailable getting WFS features: {e}")
+            raise ServiceUnavailableError(f"External service unavailable: {e}")
+        
+        # For other errors, still raise as service error
+        logger.error(f"Service error getting WFS features: {e}")
+        raise ServiceUnavailableError(f"External service error: {e}")
     
     def _filter_via_loc_features(self, wfs_response: WFSResponse) -> WFSResponse:
         """

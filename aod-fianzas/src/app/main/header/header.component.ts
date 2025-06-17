@@ -52,7 +52,7 @@ export class HeaderComponent {
               },
               type: feature.type
             })),
-            fotalFeatures: response.data.totalFeatures, // Note: keeping the typo from existing model
+            totalFeatures: response.data.totalFeatures,
             type: response.data.type
           };
           

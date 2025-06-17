@@ -1,7 +1,7 @@
 export interface WFSResponse {
     crs: CRS
     features: Feature[]
-    fotalFeatures: number
+    totalFeatures: number
     type: string
 }
 
