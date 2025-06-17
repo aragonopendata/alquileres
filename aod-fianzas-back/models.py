@@ -11,6 +11,12 @@ class SearchType(str, Enum):
     SIN_DEFINIR = "SIN_DEFINIR"
 
 
+class PublicLocationSearchRequest(BaseModel):
+    """Public API request model for geographic location search."""
+    search_text: str = Field(..., description="Text to search for (postal code, municipality, or street)")
+    search_type: Optional[SearchType] = Field(None, description="Explicit search type, auto-detected if not provided")
+
+
 class LocationSearchRequest(BaseModel):
     """Request model for geographic location search."""
     search_text: str = Field(..., description="Text to search for (postal code, municipality, or street)")

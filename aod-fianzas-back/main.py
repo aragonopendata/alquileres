@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 
 from config import settings
-from models import LocationSearchRequest, LocationSearchResponse, HealthStatus
+from models import LocationSearchRequest, PublicLocationSearchRequest, LocationSearchResponse, HealthStatus
 from services.geographic_search_service import GeographicSearchService
 from services.cache_service import cache_service
 from database2 import query_municipalities, query_streets_by_municipality, \
@@ -86,7 +86,7 @@ def health_check():
 
 
 @app.post("/api/geographic-search", response_model=LocationSearchResponse)
-def geographic_search(request: LocationSearchRequest, response: Response):
+def geographic_search(request: PublicLocationSearchRequest, response: Response):
     """
     Consolidated geographic search endpoint with caching.
     
@@ -98,7 +98,7 @@ def geographic_search(request: LocationSearchRequest, response: Response):
     5. Caches and returns WFS features
     
     Args:
-        request: Geographic search request
+        request: Public geographic search request
         response: FastAPI response object for headers
         
     Returns:
@@ -107,24 +107,32 @@ def geographic_search(request: LocationSearchRequest, response: Response):
     try:
         logger.info(f"Geographic search request: {request.search_text}")
         
+        # Convert public request to internal request with hardcoded values
+        internal_request = LocationSearchRequest(
+            search_text=request.search_text,
+            search_type=request.search_type,  # Keep the override option
+            layer="fianzas",
+            distance=1000
+        )
+        
         # Check if this will be a cache hit
-        search_type = request.search_type or geographic_search_service._detect_search_type(request.search_text)
+        search_type = internal_request.search_type or geographic_search_service._detect_search_type(internal_request.search_text)
         cache_key = cache_service.get_cache_key(
             search_type.value.lower(), 
-            f"{request.search_text}_{request.layer}_{request.distance}"
+            f"{internal_request.search_text}_{internal_request.layer}_{internal_request.distance}"
         )
         is_cached = cache_service.exists(cache_key)
         
-        search_response = geographic_search_service.search_location(request)
+        search_response = geographic_search_service.search_location(internal_request)
         
         # Add cache status header
         response.headers["X-Cache-Status"] = "HIT" if is_cached else "MISS"
         response.headers["X-Cache-Enabled"] = str(cache_service.enabled)
         
         if search_response.success:
-            logger.info(f"Search successful for '{request.search_text}': {len(search_response.data.features) if search_response.data else 0} features found")
+            logger.info(f"Search successful for '{internal_request.search_text}': {len(search_response.data.features) if search_response.data else 0} features found")
         else:
-            logger.warning(f"Search failed for '{request.search_text}': {search_response.message}")
+            logger.warning(f"Search failed for '{internal_request.search_text}': {search_response.message}")
         
         return search_response
         
