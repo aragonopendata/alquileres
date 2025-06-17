@@ -10,10 +10,10 @@ class Settings(BaseSettings):
     db_table: str = "fianzas_app"
     
     # IGEAR Platform Service URLs
-    igear_typed_search_url: str = "https://idearagondes.aragon.es/SimpleSearchService/typedSearchService"
-    igear_spatial_search_url: str = "https://idearagondes.aragon.es/SpatialSearchService/services"
-    igear_sita_wms_url: str = "https://idearagondes.aragon.es/SITA_WMS"
-    igear_visor2d_url: str = "https://idearagondes.aragon.es/Visor2D"
+    igear_typed_search_url: str = "https://idearagon.aragon.es/SimpleSearchService/typedSearchService"
+    igear_spatial_search_url: str = "https://idearagon.aragon.es/SpatialSearchService/services"
+    igear_sita_wms_url: str = "https://idearagon.aragon.es/SITA_WMS"
+    igear_visor2d_url: str = "https://idearagon.aragon.es/Visor2D"
     
     # Geographic Configuration
     epsg_code: str = "EPSG:25830"
