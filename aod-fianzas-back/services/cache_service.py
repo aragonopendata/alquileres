@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Optional, Dict, Any
-from redis import Redis, ConnectionError as RedisConnectionError
+from redis import Redis
 from config import settings
 
 logger = logging.getLogger(__name__)

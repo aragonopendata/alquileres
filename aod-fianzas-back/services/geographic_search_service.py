@@ -1,15 +1,16 @@
-import re
 import logging
+import re
 from typing import Optional
-from lxml import etree
+
 import httpx
+
 from config import settings
 from models import (
-    LocationSearchRequest, LocationSearchResponse, SearchType, 
-    ObjectId, WFSResponse, SpatialSearchResults
+    LocationSearchRequest, LocationSearchResponse, SearchType,
+    ObjectId, WFSResponse
 )
-from services.igear_service import IgearService
 from services.cache_service import cache_service
+from services.igear_service import IgearService
 
 logger = logging.getLogger(__name__)
 
@@ -391,7 +392,7 @@ class GeographicSearchService:
             distance: Search distance in meters
             
         Returns:
-            WFS response with features
+            WFS response with features (fitered features with via_loc like '- (*)')
             
         Raises:
             ServiceTimeoutError: When external service calls timeout
@@ -433,8 +434,13 @@ class GeographicSearchService:
             # Get WFS features using the CQL filter
             wfs_response = self.igear_service.sita_wms_get_feature(layer, cql_filter)
             
-            logger.info(f"Retrieved {len(wfs_response.features)} features for search")
-            return wfs_response
+            # Filter out features with via_loc starting with '- (*)'
+            original_count = len(wfs_response.features)
+            filtered_response = self._filter_via_loc_features(wfs_response)
+            filtered_count = len(filtered_response.features)
+            
+            logger.info(f"Retrieved {original_count} features, filtered to {filtered_count} features for search")
+            return filtered_response
             
         except httpx.TimeoutException as e:
             logger.error(f"Service timeout getting WFS features after {settings.igear_read_timeout}s: {e}")
@@ -454,4 +460,45 @@ class GeographicSearchService:
             
             # For other errors, still raise as service error
             logger.error(f"Service error getting WFS features: {e}")
-            raise ServiceUnavailableError(f"External service error: {e}") 
+            raise ServiceUnavailableError(f"External service error: {e}")
+    
+    def _filter_via_loc_features(self, wfs_response: WFSResponse) -> WFSResponse:
+        """
+        Filter out features with via_loc starting with '- (*)' pattern.
+        
+        Args:
+            wfs_response: Original WFS response
+            
+        Returns:
+            Filtered WFS response with features removed
+        """
+        if not wfs_response.features:
+            return wfs_response
+        
+        # Pattern to match via_loc starting with optional spaces, dash, spaces, and parentheses
+        pattern = re.compile(r'^\s*-\s*\([^)]*\)')
+        
+        filtered_features = []
+        filtered_via_locs = []
+        
+        for feature in wfs_response.features:
+            via_loc = feature.properties.via_loc
+            
+            # Keep feature if via_loc is None, empty, or doesn't match the pattern
+            if not via_loc or not pattern.match(via_loc):
+                filtered_features.append(feature)
+            else:
+                # Log the filtered via_loc for debugging
+                filtered_via_locs.append(via_loc)
+        
+        # Debug log showing filtered features
+        if filtered_via_locs:
+            logger.debug(f"Filtered out features with via_loc: {filtered_via_locs}")
+        
+        # Return new WFS response with filtered features
+        return WFSResponse(
+            crs=wfs_response.crs,
+            features=filtered_features,
+            total_features=len(filtered_features),
+            type=wfs_response.type
+        )
