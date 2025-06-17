@@ -32,7 +32,7 @@ services:
       - redis
 
   postgres:
-    image: postgres:11
+    image: postgres:17
     container_name: db-alquileres
     networks:
         - infraestructura_opendata
