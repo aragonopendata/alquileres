@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from typing import List, Tuple
 
 
 class Settings(BaseSettings):
@@ -17,7 +16,7 @@ class Settings(BaseSettings):
     
     # Geographic Configuration
     epsg_code: str = "EPSG:25830"
-    aragon_bounding_box: List[Tuple[float, float]] = [[571580, 4412223], [812351, 4756639]]
+    aragon_bounding_box: list[tuple[float, float]] = [[571580, 4412223], [812351, 4756639]]
     
     # Search Type Constants
     typed_search_cp: str = "v111_codigo_postal"
@@ -40,7 +39,7 @@ class Settings(BaseSettings):
     igear_write_timeout: int = 30  # seconds (writing request data)
     
     # Server Configuration
-    cors_origins: List[str] = ["http://localhost:4200", "http://localhost:4201", "http://localhost:4202"]
+    cors_origins: list[str] = ["http://localhost:4200", "http://localhost:4201", "http://localhost:4202"]
     log_level: str = "INFO"
     
     # Redis Configuration
@@ -51,10 +50,10 @@ class Settings(BaseSettings):
     redis_enabled: bool = True
     
     # Cache Configuration
-    cache_default_ttl: int = 3600  # 1 hour
-    cache_cp_ttl: int = 86400      # 24 hours
-    cache_localidad_ttl: int = 43200  # 12 hours
-    cache_calle_ttl: int = 21600   # 6 hours
+    cache_default_ttl: int = 2592000  # 1 month
+    cache_cp_ttl: int = 2592000       # 1 month
+    cache_localidad_ttl: int = 2592000  # 1 month
+    cache_calle_ttl: int = 2592000     # 1 month
     cache_key_prefix: str = "geo_search"
     cache_version: str = "v1"
 
