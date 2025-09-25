@@ -41,6 +41,7 @@ export class PopupComponent implements OnChanges {
       currency: "EUR",
       maximumFractionDigits: 0,
     });
+    this.popupInfo.anyo = 0;
     this.popupInfo.via_loc = feature.get('via_loc');
     for (const valor of JSON.parse(feature.get('valores'))) {
       if (valor.anyo >= this.popupInfo.anyo && valor.tipo === 1) {
