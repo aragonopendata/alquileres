@@ -8,8 +8,7 @@ from config import settings
 from models import LocationSearchRequest, PublicLocationSearchRequest, LocationSearchResponse, HealthStatus
 from services.geographic_search_service import GeographicSearchService
 from services.cache_service import cache_service
-from database2 import query_municipalities, query_streets_by_municipality, \
-    query_stats_by_street_and_municipality, DBException
+from services.json_data_service import json_data_service
 
 # Configure logging
 logging.basicConfig(
@@ -48,26 +47,26 @@ def root():
 def health_check():
     """Health check endpoint for service monitoring."""
     try:
-        # Test database connection
-        municipalities = query_municipalities()
-        db_status = "healthy" if municipalities else "unhealthy"
-        
+        # Test JSON data service
+        municipalities = json_data_service.get_municipalities()
+        json_status = "healthy" if municipalities else "unhealthy"
+
         # Test IGEAR services (basic connectivity)
         igear_status = "healthy"  # Could add actual health checks here
-        
+
         # Test cache connection
         cache_health = cache_service.health_check()
         cache_status = "healthy" if cache_health.get("healthy", False) else "degraded"
-        
+
         overall_status = "healthy"
-        if cache_status != "healthy" or db_status != "healthy":
+        if cache_status != "healthy" or json_status != "healthy":
             overall_status = "degraded"
-        
+
         return HealthStatus(
             status=overall_status,
             timestamp=datetime.utcnow().isoformat(),
             services={
-                "database": db_status,
+                "json_data": json_status,
                 "igear_services": igear_status,
                 "cache": cache_status
             }
@@ -78,7 +77,7 @@ def health_check():
             status="unhealthy",
             timestamp=datetime.utcnow().isoformat(),
             services={
-                "database": "unhealthy",
+                "json_data": "unhealthy",
                 "igear_services": "unknown",
                 "cache": "unhealthy"
             }
@@ -227,9 +226,9 @@ def geographic_search(request: PublicLocationSearchRequest, response: Response):
 # Existing endpoints - keep unchanged for backwards compatibility
 @app.get("/municipality")
 def get_municipalities():
-    """Get list of municipalities with rental data."""
+    """Get list of municipalities with rental data from JSON."""
     try:
-        municipalities = query_municipalities()
+        municipalities = json_data_service.get_municipalities()
         logger.info(f"Retrieved {len(municipalities)} municipalities")
         return municipalities
     except Exception as e:
@@ -238,12 +237,20 @@ def get_municipalities():
 
 
 @app.get("/municipality/{municipality}/street")
-def get_streets_by_municipality(municipality: str):
-    """Get list of streets for a specific municipality."""
+def get_streets_by_municipality(municipality: str, response: Response):
+    """Get list of streets for a specific municipality from JSON."""
     try:
-        streets = query_streets_by_municipality(municipality)
-        logger.info(f"Retrieved {len(streets)} streets for municipality '{municipality}'")
+        # Import here to avoid circular dependency
+        from services.streets_service import streets_service
+
+        streets = streets_service.get_streets_by_municipality(municipality)
+
+        # Add informational header
+        response.headers["X-Streets-Source"] = "JSON"
+
+        logger.info(f"Retrieved {len(streets)} streets for municipality '{municipality}' from JSON")
         return streets
+
     except Exception as e:
         logger.error(f"Error retrieving streets for municipality '{municipality}': {e}")
         raise HTTPException(status_code=500, detail="Error retrieving streets")
@@ -251,14 +258,11 @@ def get_streets_by_municipality(municipality: str):
 
 @app.get("/municipality/{municipality}/street/{street}/stats")
 def get_stats_by_municipality_street(municipality: str, street: str):
-    """Get rental statistics for a specific municipality and street."""
+    """Get rental statistics for a specific municipality and street from JSON."""
     try:
-        stats = query_stats_by_street_and_municipality(street, municipality)
+        stats = json_data_service.get_stats_by_street_and_municipality(street, municipality)
         logger.info(f"Retrieved {len(stats)} stats for '{street}' in '{municipality}'")
         return stats
-    except DBException as e:
-        logger.error(f"Database error for stats query: {e.message}")
-        raise HTTPException(status_code=500, detail="Database error")
     except Exception as e:
         logger.error(f"Error retrieving stats for '{street}' in '{municipality}': {e}")
         raise HTTPException(status_code=500, detail="Error retrieving statistics")
