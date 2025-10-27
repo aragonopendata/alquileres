@@ -3,11 +3,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Configuration settings for the AOD Fianzas backend service."""
-    
-    # Database settings
-    db_url: str = "postgresql://postgres:postgres@db-alquileres/postgres"
-    db_table: str = "fianzas_app"
-    
+
+    # Legacy Database Settings (DEPRECATED - Removed)
+    # PostgreSQL has been completely removed from the application.
+    # All data is now served from JSON file via JsonDataService.
+    # db_url: str = "postgresql://postgres:postgres@db-alquileres/postgres"
+    # db_table: str = "fianzas_app"
+
     # IGEAR Platform Service URLs
     igear_typed_search_url: str = "https://idearagon.aragon.es/SimpleSearchService/typedSearchService"
     igear_spatial_search_url: str = "https://idearagon.aragon.es/SpatialSearchService/services"

@@ -57,7 +57,6 @@ uvicorn main:app --reload
 ## Configuration
 
 Environment variables (see `config.py`):
-- `DB_URL` - PostgreSQL connection string (legacy, minimal usage)
 - `REDIS_HOST` - Redis server host
 - `REDIS_PORT` - Redis server port
 - `CORS_ORIGINS` - Allowed CORS origins
@@ -93,10 +92,11 @@ Indexes are built automatically on startup for instant lookups.
 ## Dependencies
 
 - FastAPI - Web framework
-- PostgreSQL - Legacy database (psycopg2, minimal usage)
 - Redis - Caching layer
 - HTTPX - HTTP client for IGEAR services
 - Pydantic - Data validation
+- lxml - XML processing for IGEAR responses
+- python-dotenv - Environment configuration
 
 ## Architecture
 

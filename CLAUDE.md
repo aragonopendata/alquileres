@@ -8,9 +8,9 @@ AOD Fianzas is a full-stack web application that visualizes rental deposit data 
 
 - **Frontend**: Angular 19 application with OpenLayers mapping (`aod-fianzas/`)
 - **Backend**: FastAPI service with geographic search capabilities (`aod-fianzas-back/`)
-- **Database**: PostgreSQL for rental statistics data
-- **Cache**: Redis for performance optimization
-- **Data Processing**: Python scripts for data ingestion (`data/`)
+- **Data Layer**: JSON file with O(1) hash indexes for rental statistics
+- **Cache**: Redis for performance optimization of IGEAR requests
+- **Data Processing**: Python scripts for fetching data from IGEAR WFS (`aod-fianzas-back/scripts/`)
 
 ## Common Development Commands
 
@@ -64,13 +64,11 @@ python main.py                       # Process rental data
 
 ### Backend Architecture
 - **API Framework**: FastAPI with Python
-- **Services**: `GeographicSearchService`, `IgearService`, `CacheService`, `JsonDataService`
-- **Data Storage**:
-  - JSON file (`fianzas_wfs_layer.json`) with O(1) lookup indexes for rental statistics
-  - PostgreSQL for legacy compatibility (minimal usage)
-- **Caching**: Redis with smart TTL management
+- **Services**: `GeographicSearchService`, `IgearService`, `CacheService`, `JsonDataService`, `StreetsService`
+- **Data Storage**: JSON file (`fianzas_wfs_layer.json`) with O(1) lookup indexes for rental statistics
+- **Caching**: Redis with smart TTL management for IGEAR responses
 - **External Integration**: IGEAR platform services for geographic data
-- **Performance**: In-memory hash indexes for instant data access
+- **Performance**: In-memory hash indexes for instant data access (5-20 microseconds per query)
 
 ### Data Flow
 
@@ -132,9 +130,8 @@ The application integrates with Aragon's geographic infrastructure:
 
 ### Environment Configuration
 Key environment variables for backend:
-- `DB_URL`: PostgreSQL connection string (legacy, minimal usage)
 - `REDIS_HOST`, `REDIS_PORT`: Redis configuration
-- `IGEAR_REQUEST_TIMEOUT`: IGEAR service timeout (default: 180s)
+- `IGEAR_REQUEST_TIMEOUT`: IGEAR service timeout (default: 120s)
 - `CORS_ORIGINS`: Allowed frontend origins
 
 ### Data Architecture
@@ -159,9 +156,9 @@ For local testing, install a CORS browser extension:
 
 ### Geographic Search Types
 The application handles three search types with different caching strategies:
-- **Postal Codes**: 24-hour cache TTL
-- **Municipalities**: 12-hour cache TTL  
-- **Streets**: 6-hour cache TTL
+- **Postal Codes**: 1-month cache TTL
+- **Municipalities**: 1-month cache TTL
+- **Streets**: 1-month cache TTL
 
 ### Data Schema
 **Primary Data Source**: JSON file with GeoJSON features
@@ -186,10 +183,7 @@ Each feature contains:
 ]
 ```
 
-**Legacy Database** (minimal usage):
-- Table: `v_fianzapos_2023` (configurable via `DB_TABLE`)
-- Used for: Backward compatibility only
-- Modern endpoints use JSON data exclusively
+**Legacy Database**: Removed. PostgreSQL is no longer used. All data is served from the JSON file via `JsonDataService`.
 
 ### Testing
 - Frontend tests use Jasmine/Karma
@@ -206,7 +200,6 @@ Each feature contains:
 ### Docker Services
 - Frontend container: `aod-fianzas-front` (port 4201)
 - Backend container: `aod-fianzas-back` (port 4202)
-- PostgreSQL: `db-alquileres` (port 5432)
 - Redis: `aod-fianzas-redis` (port 6379)
 
 ## Code Conventions
@@ -222,6 +215,7 @@ Each feature contains:
 - Service-oriented architecture with clear separation
 - Type hints throughout Python code
 - Comprehensive error handling for external services
+- JSON data layer with O(1) hash indexes for instant data access
 
 ### Shared Patterns
 - Feature-based organization in both frontend and backend
