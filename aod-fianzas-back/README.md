@@ -66,28 +66,73 @@ Environment variables (see `config.py`):
 
 ### Updating the JSON Data
 
-The rental statistics data is fetched from IGEAR WFS service:
+The rental statistics data is fetched from IGEAR WFS service using the included script.
+
+**To update the data:**
 
 ```bash
-# Fetch latest data from IGEAR
-cd aod-fianzas-back/scripts
+# Navigate to backend directory
+cd aod-fianzas-back
+
+# Run the fetch script
 python fetch_fianzas_layer.py
 
-# This creates/updates: fianzas_wfs_layer.json
-# Restart the service to reload data
+# This will:
+# 1. Query IGEAR SITA WMS for all fianzas features
+# 2. Download ~17MB GeoJSON file (9,332+ features)
+# 3. Save as fianzas_wfs_layer.json in the backend root
+# 4. Takes ~2-5 minutes depending on network speed
+
+# Restart the service to reload the new data
+docker-compose restart aod-fianzas-back
+# OR if running locally:
+# Press Ctrl+C and run: uvicorn main:app --reload
 ```
 
-**Data Refresh Schedule**: Manual (data is relatively static)
+**Script details:**
+- **Location**: `fetch_fianzas_layer.py` (in backend root)
+- **Source**: IGEAR SITA WMS service (https://idearagon.aragon.es/SITA_WMS)
+- **Layer**: `fianzas` (rental deposit data)
+- **Format**: GeoJSON (EPSG:25830)
+- **Timeout**: 5 minutes (for large dataset)
+- **Output**: `fianzas_wfs_layer.json` (~17MB)
+
+**Data Refresh Schedule**: Manual (rental data is relatively static, updates typically quarterly)
+
+**When to update:**
+- New rental data is published by Gobierno de Aragón
+- Missing streets or municipalities reported
+- Data quality issues identified
 
 ### Data Structure
 
 The JSON file contains GeoJSON features with:
-- Street geometries (LineStrings)
-- `via_loc`: Street name and municipality
-- `valores`: Rental statistics (JSON array)
-- `objectid`: Unique identifier
+- **Type**: FeatureCollection with 9,332+ features
+- **Geometry**: LineString coordinates for street visualization
+- **Properties**:
+  - `objectid`: Unique identifier (integer)
+  - `via_loc`: Street name and municipality (e.g., "Calle Mayor (Zaragoza)")
+  - `valores`: JSON string containing rental statistics array
 
-Indexes are built automatically on startup for instant lookups.
+**Statistics format** (inside `valores` field):
+```json
+[
+  {
+    "anyo": 2024,      // Year
+    "tipo": 1,         // 1=Vivienda (Housing), 2=Local (Commercial)
+    "min": 192.32,     // Minimum rent (€/month)
+    "max": 300.51,     // Maximum rent (€/month)
+    "media": 238.40,   // Average rent (€/month)
+    "num": 3           // Number of deposits
+  }
+]
+```
+
+**Indexes**: Four hash indexes are built automatically on startup for O(1) query performance:
+1. Municipality → Streets
+2. (Municipality, Street) → Feature
+3. ObjectID → Feature
+4. Municipalities set (cached)
 
 ## Dependencies
 
