@@ -27,7 +27,7 @@ class Settings(BaseSettings):
         Environment mappings:
         - local: idearagon.aragon.es (production, no VPN required)
         - des: idearagondes.aragon.es (desarrollo, requires VPN)
-        - pre: preidearagon.aragon.es (preproduction, requires VPN)
+        - pre: idearagon.aragon.es (preproduction, no VPN required)
         - pro: idearagon.aragon.es (production)
 
         Returns:
@@ -35,9 +35,7 @@ class Settings(BaseSettings):
         """
         if self.environment == "des":
             return "idearagondes.aragon.es"
-        elif self.environment == "pre":
-            return "preidearagon.aragon.es"
-        else:  # local or pro both use production IGEAR
+        else:  # local, pre, and pro all use production IGEAR
             return "idearagon.aragon.es"
 
     def get_cors_origins_list(self) -> list[str]:

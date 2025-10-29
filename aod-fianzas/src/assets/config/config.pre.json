@@ -2,9 +2,9 @@
   "apiUrl": "https://preopendata.aragon.es/servicios/alquileres-api",
   "environment": "pre",
   "igearServices": {
-    "typedSearchUrl": "https://idearagonpre.aragon.es/servicios/TypedSearchService",
-    "spatialSearchUrl": "https://idearagonpre.aragon.es/servicios/SpatialSearchService",
-    "sitaWmsUrl": "https://idearagonpre.aragon.es/servicios/SITA_WMS",
-    "visor2dUrl": "https://idearagonpre.aragon.es/datos/catalogo2/servlet/VisorServlet2D"
+    "typedSearchUrl": "https://idearagon.aragon.es/servicios/TypedSearchService",
+    "spatialSearchUrl": "https://idearagon.aragon.es/servicios/SpatialSearchService",
+    "sitaWmsUrl": "https://idearagon.aragon.es/servicios/SITA_WMS",
+    "visor2dUrl": "https://idearagon.aragon.es/datos/catalogo2/servlet/VisorServlet2D"
   }
 }

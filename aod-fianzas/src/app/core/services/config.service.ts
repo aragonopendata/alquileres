@@ -30,7 +30,7 @@ export interface AppConfig {
 })
 export class ConfigService {
   private config: AppConfig | null = null;
-  private readonly CONFIG_URL = '/assets/config/config.json';
+  private readonly CONFIG_URL = 'assets/config/config.json';
 
   constructor(private http: HttpClient) {}
 
