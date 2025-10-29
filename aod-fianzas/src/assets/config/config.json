@@ -1,0 +1,10 @@
+{
+  "apiUrl": "http://localhost:4202",
+  "environment": "local",
+  "igearServices": {
+    "typedSearchUrl": "https://idearagon.aragon.es/servicios/TypedSearchService",
+    "spatialSearchUrl": "https://idearagon.aragon.es/servicios/SpatialSearchService",
+    "sitaWmsUrl": "https://idearagon.aragon.es/servicios/SITA_WMS",
+    "visor2dUrl": "https://idearagon.aragon.es/datos/catalogo2/servlet/VisorServlet2D"
+  }
+}

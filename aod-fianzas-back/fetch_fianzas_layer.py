@@ -3,14 +3,31 @@ Script to fetch the complete fianzas layer from IGEAR SITA WMS service.
 
 This script queries the WFS service to retrieve all rental data features
 and saves them as a GeoJSON file.
+
+Usage:
+    python fetch_fianzas_layer.py                    # Uses production by default
+    ENVIRONMENT=development python fetch_fianzas_layer.py
+    ENVIRONMENT=preproduction python fetch_fianzas_layer.py
 """
 import requests
 import json
 import time
+import os
 from datetime import datetime
 
+# Load environment configuration
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'production')
+
+# Determine IGEAR domain based on environment
+if ENVIRONMENT == "preproduction":
+    IGEAR_DOMAIN = "preidearagon.aragon.es"
+elif ENVIRONMENT == "development":
+    IGEAR_DOMAIN = "idearagondes.aragon.es"
+else:  # production
+    IGEAR_DOMAIN = "idearagon.aragon.es"
+
 # IGEAR Service Configuration
-SITA_WMS_URL = "https://idearagon.aragon.es/SITA_WMS"
+SITA_WMS_URL = f"https://{IGEAR_DOMAIN}/SITA_WMS"
 LAYER = "fianzas"
 WFS_VERSION = "1.1.0"
 WFS_OUTPUT_FORMAT = "application/json"
@@ -33,6 +50,8 @@ def fetch_all_fianzas_features():
     print("="*70)
     print("Fetching Complete Fianzas Layer from IGEAR SITA WMS")
     print("="*70)
+    print(f"Environment: {ENVIRONMENT}")
+    print(f"IGEAR Domain: {IGEAR_DOMAIN}")
     print(f"Service URL: {SITA_WMS_URL}")
     print(f"Layer: {LAYER}")
     print(f"Output Format: {WFS_OUTPUT_FORMAT}")

@@ -1,0 +1,10 @@
+{
+  "apiUrl": "https://preopendata.aragon.es/servicios/alquileres-api",
+  "environment": "pre",
+  "igearServices": {
+    "typedSearchUrl": "https://preidearagon.aragon.es/servicios/TypedSearchService",
+    "spatialSearchUrl": "https://preidearagon.aragon.es/servicios/SpatialSearchService",
+    "sitaWmsUrl": "https://preidearagon.aragon.es/servicios/SITA_WMS",
+    "visor2dUrl": "https://preidearagon.aragon.es/datos/catalogo2/servlet/VisorServlet2D"
+  }
+}

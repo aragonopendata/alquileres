@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 
 // Define interfaces matching backend models
 export interface LocationSearchRequest {
@@ -53,7 +53,10 @@ export interface LocationSearchResponse {
 })
 export class GeographicSearchService {
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) { }
 
   /**
    * Performs a geographic search using the backend consolidated endpoint
@@ -65,6 +68,6 @@ export class GeographicSearchService {
       search_text: searchText
     };
 
-    return this.http.post<LocationSearchResponse>(`${environment.backendUrl}/api/geographic-search`, request);
+    return this.http.post<LocationSearchResponse>(`${this.configService.getApiUrl()}/api/geographic-search`, request);
   }
 } 

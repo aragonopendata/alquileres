@@ -3,55 +3,56 @@ services:
     build: ./aod-fianzas/
     container_name: aod-fianzas-front
     volumes:
+      # Custom nginx configuration
       - ./nginx.conf:/etc/nginx/default.conf
     ports:
-      - "4201:80"
+      - "${FRONTEND_PORT:-4201}:80"
     networks:
-        - infraestructura_opendata
+      - infraestructura_opendata
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-pro}
+    restart: unless-stopped
 
   backend:
     build: ./aod-fianzas-back/
     container_name: aod-fianzas-back
     networks:
-        - infraestructura_opendata
+      - infraestructura_opendata
     environment:
-      DB_URL: ${DB_URL:-postgresql://db-alquileres:5432/postgres}
-      DB_TABLE: ${DB_TABLE:-v_fianzapos_2023}
+      # Environment setting (passed to backend application)
+      ENVIRONMENT: ${ENVIRONMENT:-pro}
+
+      # Redis Configuration
       REDIS_HOST: ${REDIS_HOST:-aod-fianzas-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       REDIS_DB: ${REDIS_DB:-0}
       REDIS_ENABLED: ${REDIS_ENABLED:-true}
+
+      # IGEAR Service Timeouts
       IGEAR_REQUEST_TIMEOUT: ${IGEAR_REQUEST_TIMEOUT:-180}
       IGEAR_CONNECTION_TIMEOUT: ${IGEAR_CONNECTION_TIMEOUT:-30}
       IGEAR_READ_TIMEOUT: ${IGEAR_READ_TIMEOUT:-120}
       IGEAR_WRITE_TIMEOUT: ${IGEAR_WRITE_TIMEOUT:-30}
+
+      # CORS Override (optional)
+      CORS_ORIGINS_OVERRIDE: ${CORS_ORIGINS_OVERRIDE:-}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
-      - "4202:8000"
+      - "${BACKEND_PORT:-4202}:8000"
     depends_on:
       - redis
-
-  postgres:
-    image: postgres:17
-    container_name: db-alquileres
-    networks:
-        - infraestructura_opendata
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-#      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-    ports:
-      - "5432:5432"
-    volumes:
-        - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     container_name: aod-fianzas-redis
     networks:
-        - infraestructura_opendata
+      - infraestructura_opendata
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT_EXTERNAL:-6379}:6379"
     volumes:
       - redis-data:/data
       - ./redis.conf:/etc/redis/redis.conf
@@ -62,9 +63,9 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
+
 volumes:
-    postgres-data:
-    redis-data:
+  redis-data:
 
 networks:
   infraestructura_opendata:

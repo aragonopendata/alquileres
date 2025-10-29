@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 import { FianzaItem } from '../models/fianza-item.model';
 
 @Injectable({
@@ -10,31 +10,34 @@ import { FianzaItem } from '../models/fianza-item.model';
 })
 export class AlquileresApiService {
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) { }
 
   fetchMunicipalities(): Observable<any[]> {
-    const URL = `${environment.urlApi}/municipality`;
+    const URL = `${this.configService.getApiUrl()}/municipality`;
     return this.http.get<any[]>(URL).pipe(
       catchError(this.handleError)
     );
   }
 
   fetchStreets(municipality: string): Observable<any[]> {
-    const URL = `${environment.urlApi}/municipality/${municipality}/street`;
+    const URL = `${this.configService.getApiUrl()}/municipality/${municipality}/street`;
     return this.http.get<any[]>(URL).pipe(
       catchError(this.handleError)
     );
   }
 
   fetchResults(municipality: string, street: string): Observable<any[]> {
-    const URL = `${environment.urlApi}/municipality/${municipality}/street/${street}`;
+    const URL = `${this.configService.getApiUrl()}/municipality/${municipality}/street/${street}`;
     return this.http.get<any[]>(URL).pipe(
       catchError(this.handleError)
     );
   }
 
   fetchStats(municipality: string, street: string): Observable<FianzaItem[]> {
-    const URL = `${environment.urlApi}/municipality/${municipality}/street/${street}/stats`;
+    const URL = `${this.configService.getApiUrl()}/municipality/${municipality}/street/${street}/stats`;
     return this.http.get<FianzaItem[]>(URL).pipe(
       catchError(this.handleError)
     );

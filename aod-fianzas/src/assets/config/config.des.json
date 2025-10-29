@@ -1,0 +1,10 @@
+{
+  "apiUrl": "https://desopendata.aragon.es/servicios/alquileres-api",
+  "environment": "des",
+  "igearServices": {
+    "typedSearchUrl": "https://idearagondes.aragon.es/servicios/TypedSearchService",
+    "spatialSearchUrl": "https://idearagondes.aragon.es/servicios/SpatialSearchService",
+    "sitaWmsUrl": "https://idearagondes.aragon.es/servicios/SITA_WMS",
+    "visor2dUrl": "https://idearagondes.aragon.es/datos/catalogo2/servlet/VisorServlet2D"
+  }
+}

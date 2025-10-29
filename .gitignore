@@ -108,3 +108,30 @@ modules.xml
 .vscode
 node_modules
 __pycache__
+
+# Docker related
+# Keep docker-compose files and deployment scripts tracked
+# Only ignore .env (secrets) and temporary Docker files
+*.log
+.docker/
+docker-compose.override.yml
+
+# Claude Code instructions (local only)
+CLAUDE.md
+
+# Temporary and test files
+tmp.*
+*.bak
+test_*.py
+
+# Documentation files (except README.md)
+*.md
+!README.md
+
+# Root-level package files (not needed - frontend has its own)
+/package.json
+/package-lock.json
+
+# Deployment scripts (operational, not needed in repo)
+verify-deployment.sh
+deploy-*.sh

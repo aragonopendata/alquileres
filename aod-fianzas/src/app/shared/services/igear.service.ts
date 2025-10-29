@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from "rxjs/operators";
 import { environment } from 'src/environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 import { SpatialSearchResults } from '../models/spatial-search-results.model';
 import { WFSResponse } from '../models/wfs-response.model';
 
@@ -11,7 +12,10 @@ import { WFSResponse } from '../models/wfs-response.model';
 })
 export class IgearService {
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) { }
 
   /**
    * 
@@ -35,7 +39,7 @@ export class IgearService {
       params: params,
       responseType: 'text'
     };
-    return this.http.get<string>(environment.urlTypedSearchService, options)
+    return this.http.get<string>(this.configService.getTypedSearchUrl(), options)
       .pipe(map(xml => new DOMParser().parseFromString(xml, 'text/xml')));
   }
 
@@ -55,7 +59,7 @@ export class IgearService {
       .set('CQL_FILTER', `OBJECTID=${objectId}`)
       .set('PROPERTYNAME', 'OBJECTID')
       .set('TYPENAME_CONN', 'DV');
-    return this.http.post<SpatialSearchResults>(environment.urlSpatialSearchService, body)
+    return this.http.post<SpatialSearchResults>(this.configService.getSpatialSearchUrl(), body)
   }
 
   /**
@@ -76,7 +80,7 @@ export class IgearService {
       .set('outputFormat', 'application/json')
       .set('srsname', environment.epsgCode)
       .set('CQL_FILTER', cqlFilter);
-    return this.http.post<any>(environment.urlSitaWMS, body);
+    return this.http.post<any>(this.configService.getSitaWmsUrl(), body);
   }
 
   /**
@@ -97,7 +101,7 @@ export class IgearService {
       .set('outputFormat', 'application/json')
       .set('srsname', environment.epsgCode)
       .set('CQL_FILTER', cqlFilter);
-    return this.http.post<any>(environment.urlVisor2D, body);
+    return this.http.post<any>(this.configService.getVisor2dUrl(), body);
   }
 
 }

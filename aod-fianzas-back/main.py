@@ -26,7 +26,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.get_cors_origins_list(),
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -35,6 +35,19 @@ app.add_middleware(
 
 # Initialize services
 geographic_search_service = GeographicSearchService()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Log environment configuration on startup."""
+    logger.info("=" * 60)
+    logger.info(f"Starting AOD Fianzas API")
+    logger.info(f"Environment: {settings.environment}")
+    logger.info(f"IGEAR Domain: {settings.get_igear_domain()}")
+    logger.info(f"CORS Origins: {settings.get_cors_origins_list()}")
+    logger.info(f"Log Level: {settings.log_level}")
+    logger.info(f"Redis: {settings.redis_host}:{settings.redis_port} (enabled: {settings.redis_enabled})")
+    logger.info("=" * 60)
 
 
 @app.get("/")
