@@ -61,7 +61,6 @@ export class ListsearchComponent implements OnInit {
     this.selectedStreet = '';
     this.streets = [];
     this.fetchStreets(municipality);
-    console.log(this.selectedStreet);
   }
 
   onStreetChange(event: Event): void {
@@ -69,6 +68,5 @@ export class ListsearchComponent implements OnInit {
     const selectedStreet = selectElement.value;
     this.selectedStreet = selectedStreet;
     this.selectionChanged.emit({ municipality: this.selectedMunicipality, street: selectedStreet });
-    console.log('Emitting {this.selectedMunicipality}{selectedStreet}.');
   }
 }

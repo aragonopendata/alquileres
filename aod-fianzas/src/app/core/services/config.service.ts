@@ -42,10 +42,7 @@ export class ConfigService {
   async loadConfig(): Promise<void> {
     try {
       this.config = await this.http.get<AppConfig>(this.CONFIG_URL).toPromise();
-      console.log('✓ Runtime configuration loaded:', {
-        environment: this.config.environment,
-        apiUrl: this.config.apiUrl
-      });
+      // Configuration loaded successfully
     } catch (error) {
       console.error('Failed to load runtime configuration, using defaults:', error);
       // Fallback to local development defaults if config fails to load

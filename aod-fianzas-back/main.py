@@ -253,10 +253,7 @@ def get_municipalities():
 def get_streets_by_municipality(municipality: str, response: Response):
     """Get list of streets for a specific municipality from JSON."""
     try:
-        # Import here to avoid circular dependency
-        from services.streets_service import streets_service
-
-        streets = streets_service.get_streets_by_municipality(municipality)
+        streets = json_data_service.get_streets_by_municipality(municipality)
 
         # Add informational header
         response.headers["X-Streets-Source"] = "JSON"
