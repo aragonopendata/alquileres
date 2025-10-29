@@ -156,87 +156,11 @@ def geographic_search(request: PublicLocationSearchRequest, response: Response):
         )
 
 
-# Cache administration endpoints - DISABLED
-# Uncomment these endpoints when implementing admin interface
-# These were disabled to prevent public access until proper authentication is added
+# Note: Admin endpoints for cache management have been moved to admin_endpoints_disabled.py
+# They can be re-enabled when proper authentication is implemented.
+# See admin_endpoints_disabled.py for details.
 
-# # Hidden from public docs - administrative functionality only
-# @app.get("/api/cache/health", include_in_schema=False)
-# def cache_health():
-#     """Get cache health status."""
-#     try:
-#         health_status = cache_service.health_check()
-#         return health_status
-#     except Exception as e:
-#         logger.error(f"Cache health check error: {e}")
-#         return {"status": "error", "healthy": False, "error": str(e)}
-
-
-# # Hidden from public docs - exposes internal system metrics
-# @app.get("/api/cache/stats", include_in_schema=False)
-# def cache_stats():
-#     """Get cache statistics and metrics."""
-#     try:
-#         stats = cache_service.get_stats()
-#         return stats
-#     except Exception as e:
-#         logger.error(f"Cache stats error: {e}")
-#         return {"enabled": False, "status": "error", "error": str(e)}
-
-
-# # Hidden from public docs - administrative cache management
-# @app.delete("/api/cache/clear", include_in_schema=False)
-# def clear_cache():
-#     """Clear all geographic search cache entries."""
-#     try:
-#         pattern = f"{settings.cache_key_prefix}:*"
-#         cleared_keys = cache_service.clear_pattern(pattern)
-#         logger.info(f"Cleared {cleared_keys} cache keys")
-#         return {
-#             "success": True,
-#             "message": f"Cleared {cleared_keys} cache entries",
-#             "pattern": pattern
-#         }
-#     except Exception as e:
-#         logger.error(f"Cache clear error: {e}")
-#         return {"success": False, "error": str(e)}
-
-
-# # Hidden from public docs - administrative cache management
-# @app.delete("/api/cache/clear/{search_type}", include_in_schema=False)
-# def clear_cache_by_type(search_type: str):
-#     """Clear cache entries for a specific search type."""
-#     try:
-#         if search_type.lower() not in ['cp', 'localidad', 'calle']:
-#             raise HTTPException(status_code=400, detail="Invalid search type. Use: cp, localidad, or calle")
-#         
-#         pattern = f"{settings.cache_key_prefix}:{settings.cache_version}:{search_type.lower()}:*"
-#         cleared_keys = cache_service.clear_pattern(pattern)
-#         logger.info(f"Cleared {cleared_keys} cache keys for type {search_type}")
-#         return {
-#             "success": True,
-#             "message": f"Cleared {cleared_keys} cache entries for type {search_type}",
-#             "pattern": pattern
-#         }
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         logger.error(f"Cache clear by type error: {e}")
-#         return {"success": False, "error": str(e)}
-
-
-# # Hidden from public docs - administrative cache management
-# @app.post("/api/cache/warm", include_in_schema=False)
-# def warm_cache():
-#     """Warm cache with common searches (for future implementation)."""
-#     return {
-#         "success": True,
-#         "message": "Cache warming functionality not yet implemented",
-#         "note": "This endpoint is reserved for future cache warming strategies"
-#     }
-
-
-# Existing endpoints - keep unchanged for backwards compatibility
+# Public API endpoints
 @app.get("/municipality")
 def get_municipalities():
     """Get list of municipalities with rental data from JSON."""

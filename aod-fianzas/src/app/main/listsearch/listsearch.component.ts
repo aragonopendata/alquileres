@@ -17,7 +17,8 @@ interface Street {
     selector: 'app-listsearch',
     templateUrl: './listsearch.component.html',
     styleUrls: ['./listsearch.component.scss'],
-    imports: [NgFor, FianzaListComponent, FormsModule]
+    imports: [NgFor, FianzaListComponent, FormsModule],
+    standalone: true
 })
 export class ListsearchComponent implements OnInit {
 

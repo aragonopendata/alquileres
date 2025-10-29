@@ -109,6 +109,15 @@ modules.xml
 node_modules
 __pycache__
 
+# Python and tool cache directories
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+
+# Claude Code cache
+.claude/
+
 # Docker related
 # Keep docker-compose files and deployment scripts tracked
 # Only ignore .env (secrets) and temporary Docker files
@@ -122,7 +131,8 @@ CLAUDE.md
 # Temporary and test files
 tmp.*
 *.bak
-test_*.py
+# Ignore test files only in backend root directory (not in tests/ subdirectory)
+/aod-fianzas-back/test_*.py
 
 # Documentation files (except README.md)
 *.md

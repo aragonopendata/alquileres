@@ -11,7 +11,8 @@ Chart.register(...registerables);
     selector: 'app-fianza-list',
     templateUrl: './fianza-list.component.html',
     styleUrls: ['./fianza-list.component.scss'],
-    imports: [NgFor, NgIf]
+    imports: [NgFor, NgIf],
+    standalone: true
 })
 
 export class FianzaListComponent implements OnChanges, AfterViewChecked {
