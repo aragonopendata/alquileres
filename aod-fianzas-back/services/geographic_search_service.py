@@ -7,10 +7,11 @@ import httpx
 from config import settings
 from models import (
     LocationSearchRequest, LocationSearchResponse, SearchType,
-    ObjectId, WFSResponse
+    ObjectId, WFSResponse, Feature, FeatureProperties, CRS, CRSProperties
 )
 from services.cache_service import cache_service
 from services.igear_service import IgearService
+from services.json_data_service import json_data_service
 
 logger = logging.getLogger(__name__)
 
@@ -82,16 +83,37 @@ class GeographicSearchService:
     
     def _perform_search(self, request: LocationSearchRequest, search_type: SearchType, cache_key: str) -> LocationSearchResponse:
         """Perform the actual search operation."""
+        # For municipality searches, try local JSON first
+        if search_type == SearchType.LOCALIDAD:
+            logger.info(f"Checking local JSON for municipality: {request.search_text}")
+            json_features = self._get_all_features_for_municipality(request.search_text)
+
+            if json_features:
+                logger.info(f"Using local JSON data for municipality: {request.search_text}")
+                # Build WFS response from local JSON
+                wfs_response = self._build_wfs_from_json(json_features)
+
+                # Filter out via_loc features starting with '- (*)'
+                filtered_response = self._filter_via_loc_features(wfs_response)
+
+                # Create success response and cache it
+                return self._create_success_response_and_cache(
+                    request.search_text, search_type, filtered_response, cache_key
+                )
+            else:
+                logger.info(f"Municipality '{request.search_text}' not found in local JSON, falling back to IGEAR")
+
+        # Fall back to IGEAR services for non-municipality searches or when not found in JSON
         # Resolve object ID
         object_id_result = self._resolve_object_id_with_error_handling(request.search_text, search_type)
         if isinstance(object_id_result, LocationSearchResponse):
             # Error occurred during object ID resolution
             return object_id_result
-        
+
         object_id = object_id_result
         if not object_id.object_id:
             return self._handle_object_id_not_found(request.search_text, search_type, cache_key)
-        
+
         # Get WFS features
         return self._get_wfs_features_with_error_handling(
             object_id, request, search_type, cache_key
@@ -501,6 +523,81 @@ class GeographicSearchService:
         logger.error(f"Service error getting WFS features: {e}")
         raise ServiceUnavailableError(f"External service error: {e}")
     
+    def _get_all_features_for_municipality(self, municipality: str) -> list:
+        """
+        Get all street features for a municipality from local JSON data.
+
+        Args:
+            municipality: Municipality name to search for
+
+        Returns:
+            List of feature dicts with geometry and properties
+        """
+        features = []
+        municipality_lower = municipality.lower()
+
+        # Get all features and filter by municipality
+        for feature in json_data_service.features:
+            properties = feature.get('properties', {})
+            via_loc = properties.get('via_loc', '')
+
+            # Extract municipality from via_loc
+            if via_loc and '(' in via_loc and ')' in via_loc:
+                last_paren = via_loc.rfind('(')
+                feature_municipality = via_loc[last_paren+1:via_loc.rfind(')')].strip()
+
+                if feature_municipality.lower() == municipality_lower:
+                    features.append(feature)
+
+        logger.info(f"Found {len(features)} features for municipality '{municipality}' in local JSON")
+        return features
+
+    def _build_wfs_from_json(self, json_features: list) -> WFSResponse:
+        """
+        Build WFS response from JSON features.
+
+        Args:
+            json_features: List of feature dicts from JSON data
+
+        Returns:
+            WFSResponse matching IGEAR format
+        """
+        features = []
+
+        for json_feature in json_features:
+            properties_dict = json_feature.get('properties', {})
+
+            # Create Feature model
+            feature = Feature(
+                geometry=json_feature.get('geometry'),
+                geometry_name='the_geom',
+                id=f"fianzas.{properties_dict.get('objectid', 0)}",
+                properties=FeatureProperties(
+                    c_mun_via=properties_dict.get('c_mun_via'),
+                    objectid=properties_dict.get('objectid'),
+                    valores=properties_dict.get('valores'),
+                    via_loc=properties_dict.get('via_loc')
+                ),
+                type='Feature'
+            )
+            features.append(feature)
+
+        # Create CRS matching IGEAR format
+        crs = CRS(
+            type='name',
+            properties=CRSProperties(name=settings.epsg_code)
+        )
+
+        # Create and return WFS response
+        wfs_response = WFSResponse(
+            crs=crs,
+            features=features,
+            total_features=len(features),
+            type='FeatureCollection'
+        )
+
+        return wfs_response
+
     def _filter_via_loc_features(self, wfs_response: WFSResponse) -> WFSResponse:
         """
         Filter out features with via_loc starting with '- (*)' pattern.
