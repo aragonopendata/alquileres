@@ -6,6 +6,7 @@ and saves them as a GeoJSON file.
 
 Usage:
     python fetch_fianzas_layer.py                    # Uses production by default
+    python fetch_fianzas_layer.py --output /path/to/output.json
     ENVIRONMENT=development python fetch_fianzas_layer.py
     ENVIRONMENT=preproduction python fetch_fianzas_layer.py
 """
@@ -13,6 +14,8 @@ import requests
 import json
 import time
 import os
+import sys
+import argparse
 from datetime import datetime
 
 # Load environment configuration
@@ -34,15 +37,18 @@ WFS_OUTPUT_FORMAT = "application/json"
 EPSG_CODE = "EPSG:25830"
 REQUEST_TIMEOUT = 300  # 5 minutes for large dataset
 
-# Output file
-OUTPUT_FILE = "fianzas_wfs_layer.json"
+# Default output file
+DEFAULT_OUTPUT_FILE = "fianzas_wfs_layer.json"
 
 
-def fetch_all_fianzas_features():
+def fetch_all_fianzas_features(output_file):
     """
     Fetch all features from the fianzas layer using WFS GetFeature.
 
     This makes a single request to get ALL features without any filter.
+
+    Args:
+        output_file: Path where the data will be saved
 
     Returns:
         dict: GeoJSON response with all features
@@ -55,7 +61,7 @@ def fetch_all_fianzas_features():
     print(f"Service URL: {SITA_WMS_URL}")
     print(f"Layer: {LAYER}")
     print(f"Output Format: {WFS_OUTPUT_FORMAT}")
-    print(f"Output File: {OUTPUT_FILE}")
+    print(f"Output File: {output_file}")
     print()
 
     # WFS GetFeature request parameters
@@ -176,8 +182,49 @@ def save_to_file(data, filename):
         return False
 
 
+def validate_json_structure(data):
+    """
+    Validate that the fetched data has the expected structure.
+
+    Args:
+        data: The data to validate
+
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    if not isinstance(data, dict):
+        print("[ERROR] Data is not a dictionary")
+        return False
+
+    if 'type' not in data or data['type'] != 'FeatureCollection':
+        print("[ERROR] Data is not a FeatureCollection")
+        return False
+
+    if 'features' not in data:
+        print("[ERROR] Data missing 'features' key")
+        return False
+
+    if not isinstance(data['features'], list):
+        print("[ERROR] 'features' is not a list")
+        return False
+
+    return True
+
+
 def main():
     """Main execution function."""
+    parser = argparse.ArgumentParser(
+        description='Fetch fianzas layer data from IGEAR SITA WMS service'
+    )
+    parser.add_argument(
+        '--output',
+        default=DEFAULT_OUTPUT_FILE,
+        help=f'Output file path (default: {DEFAULT_OUTPUT_FILE})'
+    )
+    args = parser.parse_args()
+
+    output_file = args.output
+
     print()
     print("╔" + "="*68 + "╗")
     print("║" + " "*20 + "FIANZAS LAYER FETCHER" + " "*27 + "║")
@@ -185,7 +232,7 @@ def main():
     print()
 
     # Fetch data
-    data = fetch_all_fianzas_features()
+    data = fetch_all_fianzas_features(output_file)
 
     if data is None:
         print()
@@ -193,8 +240,15 @@ def main():
         print()
         return 1
 
+    # Validate structure
+    if not validate_json_structure(data):
+        print()
+        print("[FAILED] ✗ Invalid data structure")
+        print()
+        return 1
+
     # Save to file
-    success = save_to_file(data, OUTPUT_FILE)
+    success = save_to_file(data, output_file)
 
     if not success:
         print()
@@ -208,16 +262,11 @@ def main():
     print("="*70)
     print(f"✓ Successfully fetched and saved fianzas layer")
     print(f"✓ Total features: {len(data.get('features', [])):,}")
-    print(f"✓ Output file: {OUTPUT_FILE}")
-    print()
-    print("You can now copy this file to the app directories:")
-    print(f"  cp {OUTPUT_FILE} streamlit/")
-    print(f"  cp {OUTPUT_FILE} dash/")
-    print(f"  cp {OUTPUT_FILE} dash-json/")
+    print(f"✓ Output file: {output_file}")
     print()
 
     return 0
 
 
 if __name__ == '__main__':
-    exit(main())
+    sys.exit(main())

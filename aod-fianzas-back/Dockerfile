@@ -21,5 +21,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 COPY . /app
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--root-path", "/servicios/alquileres-api"]
-#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Make entrypoint script executable
+RUN chmod +x /app/docker-entrypoint.sh
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

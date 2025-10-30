@@ -41,6 +41,8 @@ El backend se configura mediante la variable `ENVIRONMENT` en el archivo `.env`:
 - `pre`: Preproducción (preidearagon.aragon.es, requiere VPN)
 - `pro`: Producción (idearagon.aragon.es)
 
+**Gestión de Datos JSON**: El backend utiliza un volumen Docker persistente para almacenar el archivo `fianzas_wfs_layer.json` (17MB). El contenedor descarga automáticamente los datos si faltan o tienen más de 30 días. Ver [docs/json-data-volume-implementation.md](docs/json-data-volume-implementation.md) para más detalles.
+
 ### Stack Completo con Docker
 
 ```bash
@@ -78,10 +80,13 @@ docker compose up -d --build
 - ✅ Una sola compilación del frontend funciona en todos los entornos
 - ✅ Configuración automática de URLs IGEAR según entorno
 - ✅ CORS configurado automáticamente por entorno
+- ✅ Gestión automática de datos JSON con volumen persistente
 - ✅ Script de verificación incluido (`./verify-deployment.sh`)
 - ✅ Configuración centralizada en `.env`
 
-Ver **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)** para documentación completa de despliegue.
+**Volúmenes Docker**:
+- `redis-data`: Cache de respuestas IGEAR
+- `fianzas-data`: Datos JSON persistentes (auto-descarga si faltan o >30 días)
 
 ### Frontend (Despliegue Manual)
 
@@ -125,6 +130,8 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 Variables de entorno importantes:
 - `ENVIRONMENT`: Entorno (local/des/pre/pro)
+- `DATA_PATH`: Ruta al volumen de datos (/app/data)
+- `DATA_REFRESH_DAYS`: Días antes de actualizar datos (30)
 - `REDIS_HOST`: Host de Redis para caché
 - `REDIS_ENABLED`: Habilitar/deshabilitar caché (true/false)
 - `LOG_LEVEL`: Nivel de logs (DEBUG/INFO/WARNING/ERROR)
@@ -164,11 +171,10 @@ Si necesita control adicional de CORS en el navegador:
 
 ## Documentación Adicional
 
-- **[CLAUDE.md](CLAUDE.md)**: Guía completa para desarrollo con Claude Code
-- **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)**: Documentación exhaustiva de despliegue Docker
+- **[docs/json-data-volume-implementation.md](docs/json-data-volume-implementation.md)**: Gestión automática de datos JSON con volúmenes Docker
+- **[docs/actualizacion_datos.md](docs/actualizacion_datos.md)**: Proceso de actualización de datos de alquileres
 - **[aod-fianzas/RUNTIME_CONFIG.md](aod-fianzas/RUNTIME_CONFIG.md)**: Configuración en tiempo de ejecución del frontend
 - **[aod-fianzas-back/ENVIRONMENT_CONFIG.md](aod-fianzas-back/ENVIRONMENT_CONFIG.md)**: Configuración de entornos del backend
-- **[TASK1.md](TASK1.md)**: Tracking de implementación de configuración multi-entorno
 
 ## Estructura del Proyecto
 

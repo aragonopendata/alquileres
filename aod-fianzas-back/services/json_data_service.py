@@ -20,9 +20,9 @@ class JsonDataService:
             json_file_path: Path to the fianzas_wfs_layer.json file
         """
         if json_file_path is None:
-            # Default to file in the same directory as the backend
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            json_file_path = os.path.join(base_dir, "fianzas_wfs_layer.json")
+            # Use volume path from environment variable
+            data_path = os.getenv('DATA_PATH', '/app/data')
+            json_file_path = os.path.join(data_path, "fianzas_wfs_layer.json")
 
         self.json_file_path = json_file_path
         self._data = None
@@ -39,6 +39,11 @@ class JsonDataService:
 
     def _load_data(self):
         """Load JSON data into memory."""
+        if not os.path.exists(self.json_file_path):
+            logger.warning(f"JSON data file not found at {self.json_file_path}, starting with empty dataset")
+            self._data = {"type": "FeatureCollection", "features": []}
+            return
+
         try:
             logger.info(f"Loading fianzas data from {self.json_file_path}")
             with open(self.json_file_path, 'r', encoding='utf-8') as f:

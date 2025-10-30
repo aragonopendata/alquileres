@@ -16,11 +16,17 @@ services:
   backend:
     build: ./aod-fianzas-back/
     container_name: aod-fianzas-back
+    volumes:
+      - fianzas-data:/app/data
     networks:
       - infraestructura_opendata
     environment:
       # Environment setting (passed to backend application)
       ENVIRONMENT: ${ENVIRONMENT:-pro}
+
+      # Data management
+      DATA_PATH: ${DATA_PATH:-/app/data}
+      DATA_REFRESH_DAYS: ${DATA_REFRESH_DAYS:-30}
 
       # Redis Configuration
       REDIS_HOST: ${REDIS_HOST:-aod-fianzas-redis}
@@ -66,6 +72,7 @@ services:
 
 volumes:
   redis-data:
+  fianzas-data:
 
 networks:
   infraestructura_opendata:
