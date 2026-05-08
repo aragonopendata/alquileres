@@ -28,8 +28,8 @@ export class PopupComponent implements OnChanges {
   chart!: Chart;
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.featureSelect.currentValue !== undefined) {
-      this.updateInfo(changes.featureSelect.currentValue);
+    if (changes['featureSelect']?.currentValue !== undefined) {
+      this.updateInfo(changes['featureSelect'].currentValue);
       this.updateChart(this.popupInfo.raw);
     }
   }
@@ -43,7 +43,14 @@ export class PopupComponent implements OnChanges {
     });
     this.popupInfo.anyo = 0;
     this.popupInfo.via_loc = feature.get('via_loc');
-    for (const valor of JSON.parse(feature.get('valores'))) {
+    let valores: any[];
+    try {
+      valores = JSON.parse(feature.get('valores'));
+    } catch (e) {
+      console.error('Failed to parse feature valores', e);
+      return;
+    }
+    for (const valor of valores) {
       if (valor.anyo >= this.popupInfo.anyo && valor.tipo === 1) {
         this.popupInfo.anyo = valor.anyo;
         this.popupInfo.vivienda_min = valor.min;
@@ -62,11 +69,17 @@ export class PopupComponent implements OnChanges {
     this.popupInfo.local_min = formatter.format(parseFloat(this.popupInfo.local_min));
     this.popupInfo.local_max = formatter.format(parseFloat(this.popupInfo.local_max));
     this.popupInfo.local_media = formatter.format(parseFloat(this.popupInfo.local_media));
-    this.popupInfo.raw = JSON.parse(feature.get('valores'));
+    try {
+      this.popupInfo.raw = JSON.parse(feature.get('valores'));
+    } catch (e) {
+      console.error('Failed to parse feature valores for raw', e);
+      this.popupInfo.raw = {};
+    }
     this.isHide = false;
   }
 
   updateChart(data: any): void {
+    if (!this.chartRef) { return; }
     const labelSet = new Set();
     let labels: any = [];
     const data_aux: any = {};

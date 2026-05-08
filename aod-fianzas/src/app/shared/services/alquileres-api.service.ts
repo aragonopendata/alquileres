@@ -23,29 +23,27 @@ export class AlquileresApiService {
   }
 
   fetchStreets(municipality: string): Observable<any[]> {
-    const URL = `${this.configService.getApiUrl()}/municipality/${municipality}/street`;
+    const URL = `${this.configService.getApiUrl()}/municipality/${encodeURIComponent(municipality)}/street`;
     return this.http.get<any[]>(URL).pipe(
       catchError(this.handleError)
     );
   }
 
   fetchResults(municipality: string, street: string): Observable<any[]> {
-    const URL = `${this.configService.getApiUrl()}/municipality/${municipality}/street/${street}`;
+    const URL = `${this.configService.getApiUrl()}/municipality/${encodeURIComponent(municipality)}/street/${encodeURIComponent(street)}`;
     return this.http.get<any[]>(URL).pipe(
       catchError(this.handleError)
     );
   }
 
   fetchStats(municipality: string, street: string): Observable<FianzaItem[]> {
-    const URL = `${this.configService.getApiUrl()}/municipality/${municipality}/street/${street}/stats`;
+    const URL = `${this.configService.getApiUrl()}/municipality/${encodeURIComponent(municipality)}/street/${encodeURIComponent(street)}/stats`;
     return this.http.get<FianzaItem[]>(URL).pipe(
       catchError(this.handleError)
     );
   }
-  
-  private handleError(error: any): Observable<never> {
-    // console.error('An error occurred:', error.message);
 
-    return throwError(error.url);
+  private handleError(error: any): Observable<never> {
+    return throwError(() => error);
   }
 }

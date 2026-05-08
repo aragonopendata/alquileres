@@ -1,8 +1,10 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { NgFor } from '@angular/common';
 import { FianzaListComponent } from '../fianza-list/fianza-list.component';
 import { AlquileresApiService } from 'src/app/shared/services/alquileres-api.service';
 import { FormsModule } from '@angular/forms';
+import { Subject, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 interface  Municipality {
   nombre_municipio: string;
@@ -20,7 +22,7 @@ interface Street {
     imports: [NgFor, FianzaListComponent, FormsModule],
     standalone: true
 })
-export class ListsearchComponent implements OnInit {
+export class ListsearchComponent implements OnInit, OnDestroy {
 
   municipalities: Municipality[] = [];
   streets: Street[] = [];
@@ -29,29 +31,35 @@ export class ListsearchComponent implements OnInit {
 
   @Output() selectionChanged = new EventEmitter<{ municipality: string, street: string }>();
 
+  private municipalityChange$ = new Subject<string>();
+  private subscription!: Subscription;
+
   constructor(private alquileresService: AlquileresApiService) { }
 
   ngOnInit(): void {
     this.fetchMunicipalities();
+    this.subscription = this.municipalityChange$.pipe(
+      switchMap(municipality => this.alquileresService.fetchStreets(municipality))
+    ).subscribe({
+      next: (data) => { this.streets = data; },
+      error: (error) => { console.error('Error fetching streets from api. ', error); }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
   }
 
   fetchMunicipalities(): void {
-    this.alquileresService.fetchMunicipalities().subscribe(data => {
-      this.municipalities = data;
-    },
-      error => {
-      console.error('Error fetching municipalities from api. ', error);
+    this.alquileresService.fetchMunicipalities().subscribe({
+      next: (data) => { this.municipalities = data; },
+      error: (error) => { console.error('Error fetching municipalities from api. ', error); }
     });
   }
 
 
   fetchStreets(municipality: string): void {
-    this.alquileresService.fetchStreets(municipality).subscribe(data => {
-      this.streets = data;
-    },
-      error => {
-      console.error('Error fetching streets from api. ', error);
-    });
+    this.municipalityChange$.next(municipality);
   }
 
   onMunicipalityChange(event: Event): void {
