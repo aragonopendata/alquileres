@@ -52,6 +52,7 @@ export class MapService {
       overlays: [overlay],
     });
     olMap.addLayer(layer);
+    olMap.updateSize();
     olMap.getView().fit(extent);
     return olMap;
   }
