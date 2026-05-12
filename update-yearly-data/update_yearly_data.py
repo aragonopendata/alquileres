@@ -288,12 +288,13 @@ def main() -> None:
                 log.error("      CSV download failed: %s", e)
                 sys.exit(1)
 
-    log.info("      Connecting to database...")
+    log.info("      Connecting to database (timeout: 15s)...")
     try:
-        conn = psycopg2.connect(db_url)
+        conn = psycopg2.connect(db_url, connect_timeout=15)
         log.info("      Connected")
-    except Exception as e:
+    except psycopg2.OperationalError as e:
         log.error("      Database connection failed: %s", e)
+        log.error("      Check DATABASE_URL and that the host is reachable on the Docker network")
         sys.exit(1)
 
     try:
@@ -309,6 +310,10 @@ def main() -> None:
         with step(5, "Create views"):
             create_views(conn, year)
 
+    except KeyboardInterrupt:
+        conn.rollback()
+        log.warning("Interrupted — changes rolled back")
+        sys.exit(1)
     except Exception as e:
         conn.rollback()
         log.error("FAILED: %s", e)
@@ -323,4 +328,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        log.warning("Interrupted")
+        sys.exit(1)
