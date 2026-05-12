@@ -12,25 +12,29 @@ One-off script to load a new year's rental deposit data into the remote PostgreS
 
 ## Requirements
 
-- Docker
+- Docker with Compose
+
+## Setup
+
+```bash
+cp .env.example .env
+# Edit .env and set DATABASE_URL
+```
 
 ## Usage
 
 ```bash
-# Build the image (once)
-docker build -t update-yearly-data .
+# Build the image (once, or after code changes)
+docker compose build
 
-# Run for a given year
-docker run --rm -e DATABASE_URL="postgresql://user:pass@host:5432/db" update-yearly-data 2025
+# Run for a given year — CSV is saved to ./data/
+docker compose run --rm update-yearly-data 2025
 ```
 
-To skip the download if you already have the CSV (mount it into the container):
+The downloaded CSV is saved to `./data/fianzapos_<year>.csv` via the bind mount, so it survives the container being removed. If you need to re-run without re-downloading:
 
 ```bash
-docker run --rm \
-  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
-  -v "$(pwd)/fianzapos_2025.csv:/app/fianzapos_2025.csv" \
-  update-yearly-data 2025 --skip-download
+docker compose run --rm update-yearly-data 2025 --skip-download
 ```
 
 ## Notes

@@ -153,11 +153,22 @@ def load_csv(conn, year: int, csv_path: Path) -> None:
 
 def add_total_rentas_str(conn, year: int) -> None:
     table = f"{SCHEMA}.fianzapos_{year}"
-    log.info("      ALTER TABLE %s ADD COLUMN total_rentas_str", table)
     with conn.cursor() as cur:
+        # IF NOT EXISTS on ADD COLUMN requires PG 9.6+; check manually instead
         cur.execute(
-            f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS total_rentas_str character varying(255)"
+            """
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = %s AND table_name = %s AND column_name = 'total_rentas_str'
+            """,
+            (SCHEMA, f"fianzapos_{year}"),
         )
+        if cur.fetchone():
+            log.info("      Column total_rentas_str already exists, skipping ALTER")
+        else:
+            log.info("      ALTER TABLE %s ADD COLUMN total_rentas_str", table)
+            cur.execute(
+                f"ALTER TABLE {table} ADD COLUMN total_rentas_str character varying(255)"
+            )
         log.info("      UPDATE total_rentas_str = CAST(total_rentas ...)")
         cur.execute(
             f"UPDATE {table} SET total_rentas_str = CAST(total_rentas AS character varying(255))"
@@ -261,7 +272,8 @@ def main() -> None:
     log.info("=" * 60)
 
     t_start = time.perf_counter()
-    csv_path = Path(f"fianzapos_{year}.csv")
+    data_dir = Path(os.environ.get("DATA_DIR", "/data"))
+    csv_path = data_dir / f"fianzapos_{year}.csv"
 
     with step(1, "Download CSV"):
         if args.skip_download:
