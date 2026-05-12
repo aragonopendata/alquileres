@@ -1,0 +1,10 @@
+[project]
+name = "update-yearly-data"
+version = "0.1.0"
+description = "One-off script to load a new year's rental deposit data into the remote database"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27.0",
+    "pandas>=2.2.3",
+    "psycopg2-binary>=2.9.10",
+]
