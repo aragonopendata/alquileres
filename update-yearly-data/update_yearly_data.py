@@ -93,13 +93,47 @@ def download_csv(dest: Path) -> None:
 # Step 2: create table
 # ---------------------------------------------------------------------------
 
-def create_table(conn, year: int) -> None:
-    log.info("      Table: %s.fianzapos_%d", SCHEMA, year)
+def existing_objects(conn, year: int) -> list:
+    """Return a list of (name, kind) for table/views that already exist."""
+    table_name = f"fianzapos_{year}"
+    view_names = [f"v_fianzapos_{year}", f"v_fianzapos_data_{year}", f"v_fianzas_all_{year}"]
+    found = []
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = %s AND table_name = %s",
+            (SCHEMA, table_name),
+        )
+        if cur.fetchone():
+            found.append((f"{SCHEMA}.{table_name}", "table"))
+        cur.execute(
+            "SELECT table_name FROM information_schema.views "
+            "WHERE table_schema = %s AND table_name = ANY(%s)",
+            (SCHEMA, view_names),
+        )
+        for (name,) in cur.fetchall():
+            found.append((f"{SCHEMA}.{name}", "view"))
+    return found
+
+
+def create_table(conn, year: int, force: bool = False) -> None:
+    if force:
+        log.info("      Dropping %s.fianzapos_%d", SCHEMA, year)
+        with conn.cursor() as cur:
+            cur.execute(
+                sql.SQL("DROP TABLE IF EXISTS {schema}.{table} CASCADE").format(
+                    schema=sql.Identifier(SCHEMA),
+                    table=sql.Identifier(f"fianzapos_{year}"),
+                )
+            )
+        conn.commit()
+
+    log.info("      Creating %s.fianzapos_%d", SCHEMA, year)
     with conn.cursor() as cur:
         cur.execute(
             sql.SQL(
                 """
-                CREATE TABLE IF NOT EXISTS {schema}.{table} (
+                CREATE TABLE {schema}.{table} (
                     anyo                integer,
                     codigo_provincia    character varying(255),
                     clave_calle         character varying(255),
@@ -118,7 +152,7 @@ def create_table(conn, year: int) -> None:
             )
         )
     conn.commit()
-    log.info("      Table created (or already existed)")
+    log.info("      Table created")
 
 
 # ---------------------------------------------------------------------------
@@ -181,7 +215,7 @@ def add_total_rentas_str(conn, year: int) -> None:
 # Step 5: create views
 # ---------------------------------------------------------------------------
 
-def create_views(conn, year: int) -> None:
+def create_views(conn, year: int, force: bool = False) -> None:
     s = SCHEMA
 
     views = [
@@ -237,9 +271,14 @@ def create_views(conn, year: int) -> None:
     ]
 
     with conn.cursor() as cur:
+        if force:
+            for view_name, _ in reversed(views):
+                log.info("      Dropping %s.%s", s, view_name)
+                cur.execute(f"DROP VIEW IF EXISTS {s}.{view_name}")
+
         for view_name, body in views:
             log.info("      Creating %s.%s", s, view_name)
-            cur.execute(f"CREATE OR REPLACE VIEW {s}.{view_name} AS {body}")
+            cur.execute(f"CREATE VIEW {s}.{view_name} AS {body}")
             log.info("      OK")
     conn.commit()
 
@@ -257,7 +296,12 @@ def main() -> None:
     parser.add_argument(
         "--skip-download",
         action="store_true",
-        help="Skip download, reuse fianzapos_<year>.csv in the current directory",
+        help="Skip download, reuse fianzapos_<year>.csv in the data directory",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Drop and recreate existing table and views instead of aborting",
     )
     args = parser.parse_args()
 
@@ -271,35 +315,51 @@ def main() -> None:
     log.info("  Yearly data update — year %d", year)
     log.info("=" * 60)
 
+    # Connect first so we fail fast before a potentially long download
+    log.info("Connecting to database (timeout: 15s)...")
+    try:
+        conn = psycopg2.connect(db_url, connect_timeout=15)
+        log.info("Connected")
+    except psycopg2.OperationalError as e:
+        log.error("Database connection failed: %s", e)
+        log.error("Check DATABASE_URL and that the host is reachable on the Docker network")
+        sys.exit(1)
+
+    # Pre-flight: check for existing objects before doing any work
+    found = existing_objects(conn, year)
+    if found:
+        if not args.force:
+            log.error("The following objects already exist for year %d:", year)
+            for name, kind in found:
+                log.error("  %s (%s)", name, kind)
+            log.error("Re-run with --force to drop and recreate them.")
+            conn.close()
+            sys.exit(1)
+        else:
+            log.warning("--force: the following objects will be dropped and recreated:")
+            for name, kind in found:
+                log.warning("  %s (%s)", name, kind)
+
     t_start = time.perf_counter()
     data_dir = Path(os.environ.get("DATA_DIR", "/data"))
     csv_path = data_dir / f"fianzapos_{year}.csv"
 
-    with step(1, "Download CSV"):
-        if args.skip_download:
-            if not csv_path.exists():
-                log.error("--skip-download set but %s not found", csv_path)
-                sys.exit(1)
-            log.info("      Skipped — using %s", csv_path)
-        else:
-            try:
-                download_csv(csv_path)
-            except Exception as e:
-                log.error("      CSV download failed: %s", e)
-                sys.exit(1)
-
-    log.info("      Connecting to database (timeout: 15s)...")
     try:
-        conn = psycopg2.connect(db_url, connect_timeout=15)
-        log.info("      Connected")
-    except psycopg2.OperationalError as e:
-        log.error("      Database connection failed: %s", e)
-        log.error("      Check DATABASE_URL and that the host is reachable on the Docker network")
-        sys.exit(1)
+        with step(1, "Download CSV"):
+            if args.skip_download:
+                if not csv_path.exists():
+                    log.error("--skip-download set but %s not found", csv_path)
+                    sys.exit(1)
+                log.info("      Skipped — using %s", csv_path)
+            else:
+                try:
+                    download_csv(csv_path)
+                except Exception as e:
+                    log.error("      CSV download failed: %s", e)
+                    sys.exit(1)
 
-    try:
         with step(2, "Create table"):
-            create_table(conn, year)
+            create_table(conn, year, force=args.force)
 
         with step(3, "Load CSV data"):
             load_csv(conn, year, csv_path)
@@ -308,7 +368,7 @@ def main() -> None:
             add_total_rentas_str(conn, year)
 
         with step(5, "Create views"):
-            create_views(conn, year)
+            create_views(conn, year, force=args.force)
 
     except KeyboardInterrupt:
         conn.rollback()

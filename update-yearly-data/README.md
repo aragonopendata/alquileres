@@ -31,7 +31,15 @@ docker compose build
 docker compose run --rm update-yearly-data 2025
 ```
 
-The downloaded CSV is saved to `./data/fianzapos_<year>.csv` via the bind mount, so it survives the container being removed. If you need to re-run without re-downloading:
+The downloaded CSV is saved to `./data/fianzapos_<year>.csv` via the bind mount, so it survives the container being removed.
+
+If the table or views already exist the script will abort and list them. Pass `--force` to drop and recreate them:
+
+```bash
+docker compose run --rm update-yearly-data 2025 --force
+```
+
+To re-run without re-downloading the CSV:
 
 ```bash
 docker compose run --rm update-yearly-data 2025 --skip-download
