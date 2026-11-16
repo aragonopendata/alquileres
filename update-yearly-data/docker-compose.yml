@@ -1,0 +1,13 @@
+services:
+  update-yearly-data:
+    build: .
+    env_file: .env
+    volumes:
+      - ./data:/data
+    networks:
+      - opendata
+
+networks:
+  opendata:
+    external: true
+    name: infraestructura_opendata

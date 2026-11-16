@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, ViewChild, SimpleChanges } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild, SimpleChanges } from '@angular/core';
 import { Map, Overlay } from 'ol';
 import { FeatureSelect } from 'src/app/shared/models/feature-select.model';
 import { WFSResponse } from 'src/app/shared/models/wfs-response.model';
@@ -12,7 +12,7 @@ import { NgIf} from '@angular/common';
     styleUrls: ['./map.component.scss'],
     imports: [NgIf, PopupComponent]
 })
-export class MapComponent implements AfterViewInit {
+export class MapComponent implements AfterViewInit, OnChanges {
   @Input() wfsResponse!: WFSResponse;
   @ViewChild(PopupComponent, { read: ElementRef }) popupRef!: ElementRef;
   isDone = false;
@@ -30,7 +30,6 @@ export class MapComponent implements AfterViewInit {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['wfsResponse'] && !changes['wfsResponse'].firstChange) {
-      console.log('WFS Response changed:', this.wfsResponse);
       this.updateMap();
     }
   }
@@ -61,6 +60,8 @@ export class MapComponent implements AfterViewInit {
         }
 
       this.updatePopup(featureSelect);
+      } else {
+        this.overlay.setPosition(undefined);
       }
 
 
@@ -79,7 +80,6 @@ export class MapComponent implements AfterViewInit {
     }
 
     try {
-      console.log('Updating map with WFS response:', this.wfsResponse);
       this.mapService.addLayer(this.olMap, 'fianzas', this.wfsResponse);
       this.isDone = true;
     } catch (error) {

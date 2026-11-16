@@ -1,8 +1,9 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { AlquileresApiService } from 'src/app/shared/services/alquileres-api.service';
 import { FianzaItem } from 'src/app/shared/models/fianza-item.model';
+import { Subject, Subscription } from 'rxjs';
+import { switchMap, filter } from 'rxjs/operators';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -15,21 +16,24 @@ Chart.register(...registerables);
     standalone: true
 })
 
-export class FianzaListComponent implements OnChanges, AfterViewChecked {
+export class FianzaListComponent implements OnChanges, OnInit, AfterViewChecked, OnDestroy {
 
   @Input() selectedMunicipality = '';
   @Input() selectedStreet = '';
   @ViewChild('chart', { read: ElementRef }) chartRef!: ElementRef;
 
   private _stats: FianzaItem[] = [];
+  stats: { anyo: number; minRenta: number; maxRenta: number; mediaRenta: number; eslocal: string; nfianzas: number }[] = [];
   chart!: Chart;
   shouldUpdateChart = false;
 
-  constructor(private http: HttpClient, private alquileresService: AlquileresApiService) { }
+  private filterTrigger$ = new Subject<{ municipality: string; street: string }>();
+  private subscription!: Subscription;
 
-  // Getter to transform snake_case to camelCase
-  get stats() {
-    return this._stats.map(item => ({
+  constructor(private alquileresService: AlquileresApiService) { }
+
+  private refreshStats(): void {
+    this.stats = this._stats.map(item => ({
       anyo: item.anyo,
       minRenta: item.min_renta,
       maxRenta: item.max_renta,
@@ -39,12 +43,33 @@ export class FianzaListComponent implements OnChanges, AfterViewChecked {
     }));
   }
 
+  ngOnInit(): void {
+    this.subscription = this.filterTrigger$.pipe(
+      filter(({ municipality, street }) => !!municipality && !!street),
+      switchMap(({ municipality, street }) =>
+        this.alquileresService.fetchStats(municipality, street)
+      )
+    ).subscribe({
+      next: (data: FianzaItem[]) => {
+        this._stats = data;
+        this.refreshStats();
+        if (this._stats.length > 0) {
+          this.shouldUpdateChart = true;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching data from api.', error);
+      }
+    });
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.selectedMunicipality) {
+    if (changes['selectedMunicipality']) {
       this._stats = [];
+      this.refreshStats();
     }
 
-    if (changes.selectedMunicipality || changes.selectedStreet) {
+    if (changes['selectedMunicipality'] || changes['selectedStreet']) {
       this.filterStats();
     }
   }
@@ -56,26 +81,20 @@ export class FianzaListComponent implements OnChanges, AfterViewChecked {
     }
   }
 
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+  }
+
   filterStats(): void {
-    if (this.selectedMunicipality && this.selectedStreet) {
-      this.alquileresService.fetchStats(this.selectedMunicipality, this.selectedStreet)
-        .subscribe((data: FianzaItem[]) => {
-          this._stats = data;
-          if (this._stats.length > 0) {
-            this.shouldUpdateChart = true;
-          }
-        }, error => {
-          console.error('Error fetching data from api.', error);
-        });
-    }
+    this.filterTrigger$.next({ municipality: this.selectedMunicipality, street: this.selectedStreet });
   }
 
   updateChart(): void {
-    const labelSet = new Set();
-    let labels: any = [];
-    const dataAux: any = {};
-    const dataVivienda: any = [];
-    const dataLocales: any = [];
+    const labelSet = new Set<number>();
+    let labels: number[] = [];
+    const dataAux: Record<number, { vivienda: number; locales: number }> = {};
+    const dataVivienda: (number | typeof NaN)[] = [];
+    const dataLocales: (number | typeof NaN)[] = [];
 
     for (const row of this.stats) {
       if (!dataAux[row.anyo]) {

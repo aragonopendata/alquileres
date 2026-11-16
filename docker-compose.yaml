@@ -7,8 +7,6 @@ services:
       - ./nginx.conf:/etc/nginx/default.conf
     ports:
       - "${FRONTEND_PORT:-4201}:80"
-    networks:
-      - infraestructura_opendata
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-pro}
     restart: unless-stopped
@@ -18,8 +16,6 @@ services:
     container_name: aod-fianzas-back
     volumes:
       - fianzas-data:/app/data
-    networks:
-      - infraestructura_opendata
     environment:
       # Environment setting (passed to backend application)
       ENVIRONMENT: ${ENVIRONMENT:-pro}
@@ -55,8 +51,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: aod-fianzas-redis
-    networks:
-      - infraestructura_opendata
     ports:
       - "${REDIS_PORT_EXTERNAL:-6379}:6379"
     volumes:
@@ -73,7 +67,3 @@ services:
 volumes:
   redis-data:
   fianzas-data:
-
-networks:
-  infraestructura_opendata:
-    external: true
